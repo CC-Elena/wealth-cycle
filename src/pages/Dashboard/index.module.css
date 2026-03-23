@@ -1,0 +1,380 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.headerIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.headerTitle {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Section Titles */
+.sectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+.sectionSubtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* Score Header Row */
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.scoreIconBox {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.scoreTextCol {
+  display: flex;
+  flex-direction: column;
+}
+
+.scoreTextTitle {
+  font-weight: bold;
+  font-size: var(--font-size-sm);
+}
+
+.scoreTextDate {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+}
+
+/* Double Cards */
+.metricsGrid {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.metricCard {
+  flex: 1;
+  background-color: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg) var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+}
+
+.metricLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.metricValue {
+  font-size: 32px;
+  font-weight: bold;
+  color: var(--color-accent);
+}
+
+/* Stats Section */
+.statsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.statsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statsIcon {
+  background: #f0f4ff;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.statsBody {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+/* Progress Bars */
+.progressBars {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.progressItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.progressLabel {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.progressPercent {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.progressBarTrack {
+  height: 6px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.progressBarFill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+.ringChartContainer {
+  width: 200px;
+  height: 200px;
+  flex-shrink: 0;
+}
+
+/* Overview Section */
+.overviewSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.overviewText {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* Action Buttons */
+.actionButtons {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-md);
+}
+
+.btn {
+  flex: 1;
+  height: 48px;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-md);
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.btn:active {
+  opacity: 0.8;
+}
+
+.btnOutline {
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  background: transparent;
+}
+
+.btnSolid {
+  background: var(--color-accent);
+  color: white;
+  box-shadow: 0 4px 12px rgba(108, 93, 211, 0.3);
+}
+
+/* 弹窗组件样式补充 */
+.sheetContainer {
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.amountDisplay {
+  font-size: 40px;
+  font-weight: bold;
+  text-align: center;
+  color: var(--color-text-primary);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.currencySymbol {
+  font-size: 24px;
+  margin-right: 4px;
+}
+
+.categoryScroll {
+  display: flex;
+  overflow-x: auto;
+  gap: var(--spacing-sm);
+  padding-bottom: var(--spacing-sm);
+}
+
+.categoryScroll::-webkit-scrollbar {
+  display: none;
+}
+
+.categoryPill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-card);
+  transition: all 0.2s;
+  cursor: pointer;
+  min-width: 64px;
+}
+
+.activePill {
+  background: var(--color-accent);
+  color: white;
+}
+
+.activePill .categoryIcon {
+  color: white;
+}
+
+.categoryIcon {
+  font-size: 24px;
+}
+
+.categoryName {
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.customKeyboard {
+  --adm-color-primary: var(--color-accent);
+}
+
+/* 发薪弹层样式 */
+.payrollContainer {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.payrollHeader {
+  padding: var(--spacing-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.closeBtn {
+  font-size: 28px;
+  color: var(--color-text-secondary);
+}
+
+.stepIndicator {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  font-weight: bold;
+}
+
+.payrollBody {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+}
+
+.stepCard {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stepEmoji {
+  font-size: 64px;
+}
+
+.stepTitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.stepDesc {
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.stepperWrapper {
+  margin-top: var(--spacing-lg);
+  background: white;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.payrollFooter {
+  padding: var(--spacing-lg);
+  padding-bottom: calc(var(--safe-area-bottom) + var(--spacing-lg));
+}
