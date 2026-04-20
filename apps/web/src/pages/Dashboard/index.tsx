@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { useFinanceStore } from '../../stores/financeStore';
 import { RecordSheet } from './RecordSheet';
@@ -9,6 +9,13 @@ const Dashboard = () => {
   const store = useFinanceStore();
   const [recordVisible, setRecordVisible] = useState(false);
   const [payrollVisible, setPayrollVisible] = useState(false);
+
+  useEffect(() => {
+    store.fetchCategories();
+    store.fetchBudgets();
+    store.fetchTransactions();
+    store.initProfile();
+  }, []);
 
   // 组装给 ECharts 的数据集
   const chartData = store.budgets.map((b) => ({

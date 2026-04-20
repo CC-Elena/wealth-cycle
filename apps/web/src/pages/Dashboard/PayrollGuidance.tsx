@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Popup, Stepper, Dialog } from 'antd-mobile';
+import { useState, useEffect } from 'react';
+import { Popup, Stepper, Dialog, Toast } from 'antd-mobile';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
 
@@ -9,25 +9,51 @@ interface PayrollGuidanceProps {
 }
 
 export const PayrollGuidance = ({ visible, onClose }: PayrollGuidanceProps) => {
+  const store = useFinanceStore();
   const [step, setStep] = useState(1);
   const [payrollAmount, setPayrollAmount] = useState(15000);
-  const processPayroll = useFinanceStore((s) => s.processPayroll);
+  const [preview, setPreview] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleNext = () => {
-    if (step === 1) {
+  const fetchPreview = async () => {
+    setLoading(true);
+    try {
+      const data = await store.getPayrollPreview(payrollAmount);
+      setPreview(data);
       setStep(2);
-    } else if (step === 2) {
-      setStep(3);
-    } else {
-      // Done - process
-      processPayroll(payrollAmount, new Date().toISOString());
+    } catch (err) {
+      Toast.show('计算失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExecute = async () => {
+    setLoading(true);
+    try {
+      await store.executePayroll({ salaryAmount: payrollAmount });
       Dialog.alert({
-        content: '发薪已处理，资金已注入可用余额池，尽情分配吧！',
+        content: `发薪已处理！\n生成可支配资金：¥${preview?.disposableIncomeGenerated?.toLocaleString()}\n预算池已同步补足。`,
         onConfirm: () => {
           setStep(1);
+          setPreview(null);
           onClose();
         },
       });
+    } catch (err) {
+      Toast.show('执行失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNext = () => {
+    if (step === 1) {
+      fetchPreview();
+    } else if (step === 2) {
+      setStep(3);
+    } else {
+      handleExecute();
     }
   };
 
@@ -65,24 +91,38 @@ export const PayrollGuidance = ({ visible, onClose }: PayrollGuidanceProps) => {
             </div>
           )}
 
-          {step === 2 && (
+          {step === 2 && preview && (
             <div className={styles.stepCard}>
               <div className={styles.stepEmoji}>🛡️</div>
-              <h2 className={styles.stepTitle}>系统自动拦截预扣资源</h2>
-              <p className={styles.stepDesc}>
-                已按设定规则锁定应急资金：¥1,000
+              <h2 className={styles.stepTitle}>资金智能分配预览</h2>
+              <div className={styles.previewList}>
+                <div className={styles.previewItem}>
+                  <span>固定账单预留：</span>
+                  <span className={styles.previewValue}>-¥{preview.fixedBillsTotal.toLocaleString()}</span>
+                </div>
+                <div className={styles.previewItem}>
+                  <span>预算池补足：</span>
+                  <span className={styles.previewValue}>-¥{preview.budgetReplenishmentTotal.toLocaleString()}</span>
+                </div>
+                <div className={styles.previewItem} style={{ borderTop: '1px solid #EEE', marginTop: 8, paddingTop: 8 }}>
+                  <strong>预计生成可支配：</strong>
+                  <strong className={styles.previewValue} style={{ color: '#6C5DD3' }}>
+                    ¥{preview.disposableIncomeGenerated.toLocaleString()}
+                  </strong>
+                </div>
+              </div>
+              <p className={styles.stepDesc} style={{ fontSize: '12px', marginTop: 12, opacity: 0.6 }}>
+                注：系统将自动更新预算周期起止时间。
               </p>
-              <p className={styles.stepDesc}>已预扣固定支出：无</p>
             </div>
           )}
 
           {step === 3 && (
             <div className={styles.stepCard}>
               <div className={styles.stepEmoji}>💧</div>
-              <h2 className={styles.stepTitle}>可支配池注水完成</h2>
+              <h2 className={styles.stepTitle}>确认注入资金池？</h2>
               <p className={styles.stepDesc}>
-                剩余 ¥{(payrollAmount - 1000).toLocaleString()} <br />
-                已准备好分配至各项预算容器中。
+                一旦确认，账户网值将增加 ¥{payrollAmount.toLocaleString()}，且所有预算进度将进入新的周期。
               </p>
             </div>
           )}
@@ -92,8 +132,9 @@ export const PayrollGuidance = ({ visible, onClose }: PayrollGuidanceProps) => {
           <button
             className={`${styles.btn} ${styles.btnSolid}`}
             onClick={handleNext}
+            disabled={loading}
           >
-            {step === 3 ? '完成注入' : '下一步'}
+            {loading ? '处理中...' : (step === 3 ? '确认执行' : '下一步')}
           </button>
         </div>
       </div>
