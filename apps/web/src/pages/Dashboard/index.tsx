@@ -126,6 +126,30 @@ const Dashboard = () => {
         </p>
       </section>
 
+      {/* 近期流水 */}
+      {store.backendTransactions.length > 0 && (
+        <section className={styles.overviewSection}>
+          <h2 className={styles.sectionTitle}>近期流水</h2>
+          <div className={styles.txList}>
+            {store.backendTransactions.slice(0, 10).map((tx) => {
+              const cat = store.categories.find((c) => c.id === tx.categoryId);
+              return (
+                <div key={tx.id} className={styles.txItem}>
+                  <div className={styles.txIcon}>{cat?.icon || '📝'}</div>
+                  <div className={styles.txInfo}>
+                    <div className={styles.txName}>{cat?.name || '未知分类'}{tx.memo ? ` · ${tx.memo}` : ''}</div>
+                    <div className={styles.txDate}>{new Date(tx.date).toLocaleDateString('zh-CN')}</div>
+                  </div>
+                  <div className={styles.txAmount}>
+                    {tx.type === 'income' ? '+' : '-'}¥{tx.amount.toFixed(2)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <div className={styles.actionButtons}>
         <button
           type="button"
@@ -157,3 +181,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

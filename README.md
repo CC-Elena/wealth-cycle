@@ -1,36 +1,35 @@
-# Rsbuild project
+# 个人财务生命周期管理 (Stock)
 
-## Setup
+本项目采用 `pnpm` Monorepo 构建，包含一个由 React 19 + Vite 驱动的响应式前端，以及一个由 NestJS 11 + Drizzle ORM 驱动的后端。
 
-Install the dependencies:
+## 📦 项目结构
 
-```bash
-npm install
+```text
+stock/
+├── apps/
+│   ├── web/        # 前端代码，使用 React + Vite + Tailwind v4 + shadcn/ui
+│   └── server/     # 后端代码，使用 NestJS + Drizzle ORM (SQLite)
+├── packages/
+│   └── shared/     # 前后端共享包，存放 Zod Schema 以及 TS 类型定义
+├── pnpm-workspace.yaml
+└── package.json    # 包含一键启动两端应用的 scripts
 ```
 
-## Get started
+## 🚀 启动与访问
 
-Start the dev server, and the app will be available at [http://localhost:3000](http://localhost:3000).
-
+首先，在项目根目录安装所需的所有依赖：
 ```bash
-npm run dev
+pnpm install
 ```
 
-Build the app for production:
-
+然后，在根目录一键启动前端和后端开发服务器：
 ```bash
-npm run build
+pnpm run dev
 ```
 
-Preview the production build locally:
+### 访问地址
+- **前端应用 (Web)**：[http://localhost:5173](http://localhost:5173) (Vite 默认地址)
+- **后端服务 (Server)**：[http://localhost:3000](http://localhost:3000) (NestJS 默认地址)
+  - 目前 API 服务会在 3000 端口运行，后续如果有 OpenAPI/Swagger 配置，也会在此端口拓展，比如 `http://localhost:3000/api`。
 
-```bash
-npm run preview
-```
-
-## Learn more
-
-To learn more about Rsbuild, check out the following resources:
-
-- [Rsbuild documentation](https://rsbuild.rs) - explore Rsbuild features and APIs.
-- [Rsbuild GitHub repository](https://github.com/web-infra-dev/rsbuild) - your feedback and contributions are welcome!
+---

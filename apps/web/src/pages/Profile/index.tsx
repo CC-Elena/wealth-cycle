@@ -1,17 +1,32 @@
-import React from 'react';
-import { Switch } from 'antd-mobile';
+import React, { useState } from 'react';
+import { Switch, Toast } from 'antd-mobile';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
+import ky from 'ky';
+import { UserSchema } from '@stock/shared';
 
 const Profile = () => {
   const store = useFinanceStore();
+  const [apiResult, setApiResult] = useState<string>('');
+
+  const handleTestApi = async () => {
+    try {
+      const result = await ky.get('http://localhost:3000/users/test').json();
+      const validUser = UserSchema.parse(result);
+      Toast.show({ icon: 'success', content: 'API通信且Zod校验成功: ' + validUser.name });
+      setApiResult(JSON.stringify(validUser, null, 2));
+    } catch (error: any) {
+      Toast.show({ icon: 'fail', content: 'API测试失败' });
+      setApiResult(error.message);
+    }
+  };
 
   return (
     <div className={`page-container ${styles.container}`}>
       <div className={styles.headerRow}>
         <div className={styles.iconBtn}>‹</div>
         <div className={styles.title}>我的</div>
-        <div className={styles.iconBtn}>⚙️</div>
+        <div className={styles.iconBtn} onClick={handleTestApi}>⚙️API</div>
       </div>
 
       <div className={styles.passportCard}>

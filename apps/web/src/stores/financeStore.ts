@@ -1,20 +1,66 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import ky from 'ky';
 import type { BudgetBlock, Transaction, UserProfile } from '../types';
+
+// 后端分类数据的类型
+export interface BackendCategory {
+  id: string;
+  userId: string;
+  name: string;
+  parentId: string | null;
+  type: string;
+  icon: string;
+  isSystem: boolean;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 后端交易数据的类型
+export interface BackendTransaction {
+  id: string;
+  userId: string;
+  amount: number;
+  categoryId: string;
+  type: string;
+  memo: string | null;
+  paymentMethod: string | null;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const API_BASE = 'http://localhost:3000';
 
 interface FinanceState {
   // --- 数据集合 ---
   transactions: Transaction[];
+  backendTransactions: BackendTransaction[];
   budgets: BudgetBlock[];
+  categories: BackendCategory[];
   profile: UserProfile;
 
-  // --- 核心计算值 (作为 getters 存在时可通过 hooks 取，这里保存为普通库状态) ---
-  disposableIncome: number; // 可支配资金 (总入账 - 预分配/冻结)
+  // --- 核心计算值 ---
+  disposableIncome: number;
 
   // --- 方法 Actions ---
   addTransaction: (tx: Omit<Transaction, 'id' | 'timestamp'>) => void;
   processPayroll: (amount: number, date: string) => void;
   updateBudget: (id: string, newTotal: number) => void;
+
+  // Backend Integration
+  initProfile: () => Promise<void>;
+  updatePreferences: (data: Partial<UserProfile>) => Promise<void>;
+  fetchCategories: () => Promise<void>;
+  fetchTransactions: () => Promise<void>;
+  createTransactionOnServer: (data: {
+    amount: number;
+    categoryId: string;
+    type?: string;
+    memo?: string;
+  }) => Promise<void>;
 
   // 初始化 Mock
   resetToMock: () => void;
@@ -68,9 +114,11 @@ const MOCK_BUDGETS: BudgetBlock[] = [
 
 export const useFinanceStore = create<FinanceState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       transactions: [],
+      backendTransactions: [],
       budgets: MOCK_BUDGETS,
+      categories: [],
       profile: MOCK_PROFILE,
       disposableIncome: 8500,
 
@@ -82,14 +130,12 @@ export const useFinanceStore = create<FinanceState>()(
             timestamp: Date.now(),
           };
 
-          // 扣减预算或改变可支配资金
           const newBudgets = [...state.budgets];
           if (tx.type === 'expense') {
             const b = newBudgets.find((b) => b.id === tx.categoryId);
             if (b) {
               b.spentAmount += tx.amount;
             } else {
-              // 预算外开销扣自身净额
               state.disposableIncome -= tx.amount;
             }
           }
@@ -103,17 +149,14 @@ export const useFinanceStore = create<FinanceState>()(
       },
 
       processPayroll: (amount, date) => {
-        set((state) => {
-          // 极简薪水入账重配模型：增加可支配资金
-          return {
-            disposableIncome: state.disposableIncome + amount,
-            profile: {
-              ...state.profile,
-              lastPayrollDate: date,
-              netWorth: state.profile.netWorth + amount,
-            },
-          };
-        });
+        set((state) => ({
+          disposableIncome: state.disposableIncome + amount,
+          profile: {
+            ...state.profile,
+            lastPayrollDate: date,
+            netWorth: state.profile.netWorth + amount,
+          },
+        }));
       },
 
       updateBudget: (id, newTotal) => {
@@ -124,17 +167,81 @@ export const useFinanceStore = create<FinanceState>()(
         }));
       },
 
+      // ─── Backend Integration ───
+
+      initProfile: async () => {
+        try {
+          const { user, profile: backendProfile } = await ky.get(`${API_BASE}/users/me`).json<{ user: any; profile: any }>();
+          set((state) => ({
+            profile: {
+              ...state.profile,
+              ...backendProfile,
+              name: user.email || user.id,
+              avatarUrl: backendProfile.avatarUrl || state.profile.avatarUrl,
+            },
+          }));
+        } catch (error) {
+          console.error('Failed to init profile from backend', error);
+        }
+      },
+
+      updatePreferences: async (data) => {
+        try {
+          const updatedProfile = await ky.put(`${API_BASE}/users/me/preferences`, { json: data }).json<any>();
+          set((state) => ({
+            profile: {
+              ...state.profile,
+              ...updatedProfile,
+            },
+          }));
+        } catch (error) {
+          console.error('Failed to update preferences', error);
+          throw error;
+        }
+      },
+
+      fetchCategories: async () => {
+        try {
+          const categories = await ky.get(`${API_BASE}/categories`).json<BackendCategory[]>();
+          set({ categories });
+        } catch (error) {
+          console.error('Failed to fetch categories', error);
+        }
+      },
+
+      fetchTransactions: async () => {
+        try {
+          const backendTransactions = await ky.get(`${API_BASE}/transactions`).json<BackendTransaction[]>();
+          set({ backendTransactions });
+        } catch (error) {
+          console.error('Failed to fetch transactions', error);
+        }
+      },
+
+      createTransactionOnServer: async (data) => {
+        try {
+          await ky.post(`${API_BASE}/transactions`, { json: data }).json();
+          // 刷新列表
+          await get().fetchTransactions();
+        } catch (error) {
+          console.error('Failed to create transaction', error);
+          throw error;
+        }
+      },
+
       resetToMock: () => {
         set({
           transactions: [],
+          backendTransactions: [],
           budgets: MOCK_BUDGETS,
+          categories: [],
           profile: MOCK_PROFILE,
           disposableIncome: 8500,
         });
       },
     }),
     {
-      name: 'finance-storage', // local storage key
+      name: 'finance-storage',
     },
   ),
 );

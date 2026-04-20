@@ -8,49 +8,58 @@ interface RecordSheetProps {
   onClose: () => void;
 }
 
-const CATEGORIES = [
-  { id: 'b1', name: '饮食', icon: '🍔' },
-  { id: 'b2', name: '日用', icon: '🛒' },
-  { id: 'b3', name: '交通', icon: '🚗' },
-  { id: 'b4', name: '娱乐', icon: '🎉' },
-  { id: 'other', name: '其他', icon: '📂' },
-];
-
 export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
   const [amount, setAmount] = useState('0');
-  const [selectedCategoryId, setSelectedCategoryId] = useState(
-    CATEGORIES[0].id,
-  );
-  const addTransaction = useFinanceStore((s) => s.addTransaction);
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [memo, setMemo] = useState('');
+  const categories = useFinanceStore((s) => s.categories);
+  const createTransactionOnServer = useFinanceStore((s) => s.createTransactionOnServer);
+
+  // 只展示活跃分类
+  const activeCategories = categories.filter((c) => c.isActive);
+
+  // 首次渲染时若还没选中，则默认选第一个
+  if (!selectedCategoryId && activeCategories.length > 0) {
+    setSelectedCategoryId(activeCategories[0].id);
+  }
 
   const handleInput = (v: string) => {
     if (v === 'BACKSPACE') {
       setAmount((prev) => (prev.length > 1 ? prev.slice(0, -1) : '0'));
+    } else if (v === '.') {
+      // 防止重复小数点
+      if (amount.includes('.')) return;
+      setAmount((prev) => prev + '.');
     } else {
       setAmount((prev) => (prev === '0' ? v : prev + v));
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const num = parseFloat(amount);
     if (!num || num <= 0) {
       Toast.show('请输入有效金额');
       return;
     }
+    if (!selectedCategoryId) {
+      Toast.show('请选择分类');
+      return;
+    }
 
-    addTransaction({
-      type: 'expense',
-      amount: num,
-      categoryId: selectedCategoryId,
-      date: new Date().toISOString(),
-      memo: '',
-      tags: [],
-      subItems: [],
-    });
-
-    Toast.show({ icon: 'success', content: '记账成功' });
-    setAmount('0');
-    onClose();
+    try {
+      await createTransactionOnServer({
+        amount: num,
+        categoryId: selectedCategoryId,
+        type: 'expense',
+        memo: memo || undefined,
+      });
+      Toast.show({ icon: 'success', content: '记账成功' });
+      setAmount('0');
+      setMemo('');
+      onClose();
+    } catch {
+      Toast.show({ icon: 'fail', content: '记账失败' });
+    }
   };
 
   return (
@@ -69,8 +78,20 @@ export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
           <span className={styles.amountValue}>{amount}</span>
         </div>
 
+        {/* 备注输入 */}
+        <div className={styles.memoRow}>
+          <input
+            className={styles.memoInput}
+            type="text"
+            placeholder="添加备注..."
+            value={memo}
+            onChange={(e) => setMemo(e.target.value)}
+          />
+        </div>
+
+        {/* 分类网格 — 从后端拉取 */}
         <div className={styles.categoryScroll}>
-          {CATEGORIES.map((cat) => {
+          {activeCategories.map((cat) => {
             const isActive = selectedCategoryId === cat.id;
             return (
               <div

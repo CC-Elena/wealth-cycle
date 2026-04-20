@@ -78,12 +78,12 @@ export interface StockEvent {
   reason?: string;        // discard 等的理由
 }
 
-export interface UserProfile {
-  name: string;
-  avatarUrl: string;
-  netWorth: number;
+import type { UserProfile as SharedUserProfile } from '@stock/shared';
+
+// Extend the shared profile with frontend-only state for now
+export interface UserProfile extends Omit<SharedUserProfile, 'name'> {
+  name: string; // From User table, merged here for convenience
   payrollCycleDays: number;
   monthlyIncomePrediction: number; // 预估月薪
   lastPayrollDate: string;
-  emergencyFundEnabled: boolean;
 }

@@ -1,0 +1,21 @@
+{
+  "output": {
+    "filePath": "repomix-output.xml",
+    "style": "xml",
+    "parsableStyle": true
+  },
+  "ignore": {
+    "useGitignore": true,
+    "useDefaultPatterns": true,
+    "customPatterns": [
+      ".agent/**",
+      ".gemini/**",
+      ".cursor/**",
+      ".vscode/**",
+      "openspec/**",
+      "pnpm-lock.yaml",
+      "docs/**",
+      "repomix-output.*"
+    ]
+  }
+}
