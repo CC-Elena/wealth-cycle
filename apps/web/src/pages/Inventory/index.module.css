@@ -1,0 +1,246 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  padding-bottom: var(--spacing-xl);
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.navAction {
+  color: var(--color-text-secondary);
+  font-size: 24px;
+}
+
+/* 视图切换器 Dual View Toggle */
+.viewToggle {
+  display: flex;
+  background-color: #F0F0F5;
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  position: relative;
+  margin-bottom: var(--spacing-sm);
+}
+
+.toggleBtn {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  border-radius: var(--radius-md);
+  color: var(--color-text-tertiary);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  z-index: 2;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.toggleActive {
+  color: var(--color-accent);
+}
+
+.toggleBg {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: calc(50% - 4px);
+  background-color: white;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  z-index: 1;
+}
+
+.slideRight {
+  transform: translateX(100%);
+}
+
+/* ----------- 区域视角 (Station View) ----------- */
+.stationGroup {
+  margin-bottom: var(--spacing-lg);
+}
+
+.stationHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 2px solid #F5F4FE;
+  margin-bottom: var(--spacing-sm);
+}
+
+.stationIcon {
+  font-size: 24px;
+}
+
+.stationName {
+  font-size: var(--font-size-md);
+  font-weight: bold;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.stationCount {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  background: #F0F0F5;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* ----------- 物品视角 (Item View) ----------- */
+.itemAggrGroup {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.itemAggrIcon {
+  width: 48px;
+  height: 48px;
+  background-color: var(--color-bg-card);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+}
+
+.itemAggrInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.itemAggrName {
+  font-size: var(--font-size-md);
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+.itemAggrTotal {
+  font-size: var(--font-size-sm);
+  color: var(--color-accent);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.itemAggrSub {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+
+/* ----------- 公共批次卡片 (StockLot Card) ----------- */
+.lotGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}
+
+.lotCard {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+
+.lotTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-xs);
+}
+
+.lotIcon {
+  font-size: 24px;
+  background: var(--color-bg-card);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lotBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #F0F0F5;
+  color: var(--color-text-secondary);
+}
+
+.lotBadgeDanger {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--color-danger);
+}
+
+.lotName {
+  font-size: var(--font-size-sm);
+  font-weight: bold;
+  color: var(--color-text-primary);
+  margin-bottom: 2px;
+}
+
+.lotQty {
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.lotExpInfo {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  margin-top: var(--spacing-sm);
+  display: flex;
+  justify-content: space-between;
+}
+
+.emptyState {
+  text-align: center;
+  color: var(--color-text-tertiary);
+  padding: 40px 0;
+  font-size: var(--font-size-sm);
+}
+
+/* U Bar for Lots */
+.uBarContainer {
+  height: 6px;
+  background-color: #F0F0F5;
+  border-radius: 3px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+
+.uBarFill {
+  height: 100%;
+  border-radius: 3px;
+  background-color: var(--color-success);
+}
+.uBarDanger {
+  background-color: var(--color-danger);
+}
+.uBarWarning {
+  background-color: var(--color-warning);
+}
