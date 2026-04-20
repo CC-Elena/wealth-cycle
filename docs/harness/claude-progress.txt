@@ -1,0 +1,18 @@
+# Stock 项目当前进度 (2026-04-20)
+
+## 总体状态
+项目已进入 **Phase 2: 财务管理深化**，并正式确立 **AI-First / Agent-Centric** 开发模式。
+目前的开发重点已全面转向 **Agent 智能化核心能力 (M4-A)**。所有的财务记账、预算管理与库存功能都将围绕 Agent 的主动服务与极简交互展开。
+
+## 已完成里程碑
+- [x] **基础设施 (S1)**: NestJS 后端 + Vite/React 前端 + pnpm Monorepo。
+- [x] **用户与账务基础 (M1, M3)**: 用户认证、核心收支记录逻辑。
+- [x] **治理体系升级**: 建立 `task-workflow-manager` Skill，确立“大纲入 Harness，执行入 OpenSpec”的混合模式。
+
+## 当前正在进行项 (Active)
+- **Agent 核心能力 (M4-A-Highest)**: 语义记账识别、生存天数诊断、复合拆单支持。
+- **Agent 技术基座 (M4-F)**: 上下文注入 (Context Injection) 与 结构化输出约束。
+
+## 下一步建议
+1. 针对 **M4-A1** 或 **M5-F1** 启动 `openspec-propose` 流程。
+2. 内部逻辑补全：优先处理 **S4 (SQLCipher)** 以确保数据安全性。

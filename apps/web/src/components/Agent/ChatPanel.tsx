@@ -24,6 +24,12 @@ export const ChatPanel = ({ visible, onClose }: ChatPanelProps) => {
     if (!inputValue.trim() || store.isAgentLoading) return;
     const msg = inputValue;
     setInputValue('');
+    
+    // 隐藏键盘：在 H5/移动端环境下发送后手动失去焦点
+    if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+      (document.activeElement as HTMLElement)?.blur();
+    }
+    
     await store.askAgent(msg);
   };
 
@@ -133,10 +139,11 @@ export const ChatPanel = ({ visible, onClose }: ChatPanelProps) => {
         <footer className={styles.inputFooter}>
           <div className={styles.inputWrapper}>
              <Input
-               placeholder="说点什么..."
+               placeholder="通过对话记账、查询..."
                value={inputValue}
                onChange={setInputValue}
                onEnterPress={handleSend}
+               autoFocus={!/Mobi|Android|iPhone/i.test(navigator.userAgent)}
              />
              <button 
                className={styles.sendBtn} 
