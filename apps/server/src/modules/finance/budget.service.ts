@@ -13,10 +13,13 @@ export class BudgetService {
     @Inject(DB_CONNECTION) private readonly db: BetterSQLite3Database<typeof schema>,
   ) {}
 
-  async getBudgetPlans() {
+  async getBudgetPlans(ledgerId?: string) {
     const plans = this.db.select()
       .from(schema.budgetPlans)
-      .where(eq(schema.budgetPlans.userId, DEFAULT_USER_ID))
+      .where(and(
+        eq(schema.budgetPlans.userId, DEFAULT_USER_ID),
+        ledgerId ? eq(schema.budgetPlans.ledgerId, ledgerId) : undefined
+      ))
       .all();
 
     const plansWithProgress = [];
@@ -43,6 +46,7 @@ export class BudgetService {
         .where(
           and(
             eq(schema.transactions.userId, DEFAULT_USER_ID),
+            ledgerId ? eq(schema.transactions.ledgerId, ledgerId) : undefined,
             eq(schema.transactions.type, 'expense'),
             inArray(schema.transactions.categoryId, categoryIds),
             gte(schema.transactions.date, start),
@@ -75,6 +79,7 @@ export class BudgetService {
     this.db.insert(schema.budgetPlans).values({
       id,
       userId: DEFAULT_USER_ID,
+      ledgerId: data.ledgerId,
       name: data.name,
       totalAmount: data.totalAmount,
       period: data.period ?? 'monthly',
@@ -133,5 +138,44 @@ export class BudgetService {
     }
 
     return this.getBudgetPlanById(id);
+  }
+
+  async reallocateBudget(fromId: string, toId: string, amount: number) {
+    const fromPlan = await this.getBudgetPlanById(fromId);
+    const toPlan = await this.getBudgetPlanById(toId);
+
+    if (!fromPlan || !toPlan) {
+      throw new Error('One or both budget plans not found');
+    }
+
+    if (fromPlan.ledgerId !== toPlan.ledgerId) {
+      throw new Error('预算调剂仅限在同一账本内进行');
+    }
+
+    if (fromPlan.totalAmount < amount) {
+      throw new Error('Insufficient budget in source plan to reallocate');
+    }
+
+    const now = new Date();
+    
+    // Update source
+    this.db.update(schema.budgetPlans)
+      .set({ 
+        totalAmount: fromPlan.totalAmount - amount,
+        updatedAt: now 
+      })
+      .where(eq(schema.budgetPlans.id, fromId))
+      .run();
+
+    // Update target
+    this.db.update(schema.budgetPlans)
+      .set({ 
+        totalAmount: toPlan.totalAmount + amount,
+        updatedAt: now 
+      })
+      .where(eq(schema.budgetPlans.id, toId))
+      .run();
+
+    return { success: true, fromId, toId, amount };
   }
 }

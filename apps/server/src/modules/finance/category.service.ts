@@ -13,10 +13,13 @@ export class CategoryService {
     @Inject(DB_CONNECTION) private readonly db: BetterSQLite3Database<typeof schema>,
   ) {}
 
-  getAllCategories() {
+  getAllCategories(ledgerId: string) {
     return this.db.select()
       .from(schema.categories)
-      .where(eq(schema.categories.userId, DEFAULT_USER_ID))
+      .where(and(
+        eq(schema.categories.userId, DEFAULT_USER_ID),
+        eq(schema.categories.ledgerId, ledgerId)
+      ))
       .orderBy(asc(schema.categories.sortOrder))
       .all();
   }
@@ -28,6 +31,7 @@ export class CategoryService {
     this.db.insert(schema.categories).values({
       id,
       userId: DEFAULT_USER_ID,
+      ledgerId: data.ledgerId,
       name: data.name,
       parentId: data.parentId ?? null,
       type: data.type ?? 'expense',

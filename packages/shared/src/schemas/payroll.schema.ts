@@ -16,6 +16,7 @@ export const FixedBillSchema = z.object({
 
 export const CreateFixedBillSchema = z.object({
   name: z.string().min(1),
+  ledgerId: z.string().optional(),
   amount: z.number().positive(),
   categoryId: z.string().optional(),
   type: z.enum(['expense', 'transfer']).default('expense'),
@@ -43,6 +44,7 @@ export const PayrollEventSchema = z.object({
 
 export const CreatePayrollEventSchema = z.object({
   salaryAmount: z.number().positive(),
+  ledgerId: z.string().optional(),
   fixedBillIds: z.array(z.string()).optional(), // 本次发薪考虑的账单
   budgetReplenishment: z.record(z.number()).optional(), // 各个预算池的补足额度 {budgetId: amount}
 });

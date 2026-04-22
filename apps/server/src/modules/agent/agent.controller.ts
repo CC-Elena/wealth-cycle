@@ -1,12 +1,21 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Headers } from '@nestjs/common';
 import { AgentService } from './agent.service';
+import { ReviewService } from '../finance/review.service';
 
 @Controller('agent')
 export class AgentController {
-  constructor(private readonly agentService: AgentService) {}
+  constructor(
+    private readonly agentService: AgentService,
+    private readonly reviewService: ReviewService,
+  ) {}
 
   @Post('chat')
-  async chat(@Body('messages') messages: any[]) {
-    return this.agentService.chat(messages);
+  async chat(@Headers('x-ledger-id') ledgerId: string, @Body('messages') messages: any[]) {
+    return this.agentService.chat(ledgerId, messages);
+  }
+
+  @Post('reviews')
+  async submitReview(@Body() body: { taskId: string; rating: number; usageFrequency: string; comment?: string }) {
+    return this.reviewService.submitReview(body.taskId, body.rating, body.usageFrequency, body.comment);
   }
 }

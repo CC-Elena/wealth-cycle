@@ -5,6 +5,7 @@ import * as schema from '../../database/schema';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { CreatePayrollEvent, CreateFixedBill } from '@stock/shared';
 import { BudgetService } from './budget.service';
+import { AccountService } from './account.service';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 
@@ -13,12 +14,16 @@ export class PayrollService {
   constructor(
     @Inject(DB_CONNECTION) private readonly db: BetterSQLite3Database<typeof schema>,
     private readonly budgetService: BudgetService,
+    private readonly accountService: AccountService,
   ) {}
 
-  async getFixedBills() {
+  async getFixedBills(ledgerId?: string) {
     return this.db.select()
       .from(schema.fixedBills)
-      .where(eq(schema.fixedBills.userId, DEFAULT_USER_ID))
+      .where(and(
+        eq(schema.fixedBills.userId, DEFAULT_USER_ID),
+        ledgerId ? eq(schema.fixedBills.ledgerId, ledgerId) : undefined
+      ))
       .all();
   }
 
@@ -28,6 +33,7 @@ export class PayrollService {
     this.db.insert(schema.fixedBills).values({
       id,
       userId: DEFAULT_USER_ID,
+      ledgerId: data.ledgerId,
       ...data,
       createdAt: now,
       updatedAt: now,
@@ -35,12 +41,12 @@ export class PayrollService {
     return id;
   }
 
-  async calculatePayrollPreview(salary: number) {
-    const fixedBills = await this.getFixedBills();
+  async calculatePayrollPreview(ledgerId: string, salary: number) {
+    const fixedBills = await this.getFixedBills(ledgerId);
     const activeFixedBills = fixedBills.filter(b => b.isActive);
     const fixedBillsTotal = activeFixedBills.reduce((sum, b) => sum + b.amount, 0);
 
-    const budgets = await this.budgetService.getBudgetPlans();
+    const budgets = await this.budgetService.getBudgetPlans(ledgerId);
     let budgetReplenishmentTotal = 0;
     const replenishmentDetails: Record<string, number> = {};
 
@@ -72,26 +78,34 @@ export class PayrollService {
   }
 
   async executePayroll(data: CreatePayrollEvent) {
-    const preview = await this.calculatePayrollPreview(data.salaryAmount);
+    const ledgerId = data.ledgerId;
+    if (!ledgerId) throw new Error('Ledger ID is required for payroll');
+
+    const preview = await this.calculatePayrollPreview(ledgerId, data.salaryAmount);
     const now = new Date();
     const eventId = `payroll-${Date.now()}`;
 
-    // 1. Update User Profile
-    const profile = this.db.select().from(schema.userProfiles).where(eq(schema.userProfiles.userId, DEFAULT_USER_ID)).get();
-    if (profile) {
-      this.db.update(schema.userProfiles)
-        .set({
-          netWorth: (profile.netWorth || 0) + data.salaryAmount,
-          disposableIncome: (profile.disposableIncome || 0) + preview.disposableIncomeGenerated,
-          lastPayday: now,
-          updatedAt: now,
-        })
-        .where(eq(schema.userProfiles.userId, DEFAULT_USER_ID))
-        .run();
+    // 1. Update Ledger Financials (净资产调增, 可支配资金调增)
+    const ledger = this.db.select().from(schema.ledgers).where(eq(schema.ledgers.id, ledgerId)).get();
+    if (ledger) {
+      await this.db.transaction(async (tx) => {
+        tx.update(schema.ledgers)
+          .set({
+            netWorth: (ledger.netWorth || 0) + data.salaryAmount,
+            disposableIncome: (ledger.disposableIncome || 0) + preview.disposableIncomeGenerated,
+            lastPayday: now,
+            updatedAt: now,
+          })
+          .where(eq(schema.ledgers.id, ledgerId))
+          .run();
+
+        const accountId = data.accountId || await this.accountService.ensureDefaultAccount();
+        await this.accountService.updateBalance(accountId, preview.disposableIncomeGenerated, tx);
+      });
     }
 
-    // 2. Update Budget Period Dates (This resets spent calculation for next period)
-    const budgets = await this.budgetService.getBudgetPlans();
+    // 2. Update Budget Period Dates
+    const budgets = await this.budgetService.getBudgetPlans(ledgerId);
     for (const budget of budgets) {
       const nextPeriodEnd = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
       this.db.update(schema.budgetPlans)
@@ -108,6 +122,7 @@ export class PayrollService {
     this.db.insert(schema.payrollEvents).values({
       id: eventId,
       userId: DEFAULT_USER_ID,
+      ledgerId,
       salaryAmount: data.salaryAmount,
       fixedBillsTotal: preview.fixedBillsTotal,
       budgetReplenishmentTotal: preview.budgetReplenishmentTotal,
@@ -122,5 +137,11 @@ export class PayrollService {
     }).run();
 
     return { id: eventId, ...preview };
+  }
+
+  async deleteFixedBill(id: string) {
+    this.db.delete(schema.fixedBills)
+      .where(eq(schema.fixedBills.id, id))
+      .run();
   }
 }

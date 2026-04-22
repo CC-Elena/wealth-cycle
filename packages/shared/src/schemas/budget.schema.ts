@@ -25,6 +25,7 @@ export const BudgetPlanSchema = z.object({
 
 export const CreateBudgetPlanSchema = z.object({
   name: z.string().min(1),
+  ledgerId: z.string().optional(),
   categoryIds: z.array(z.string()).min(1),
   totalAmount: z.number().positive(),
   period: BudgetPeriodEnum.default('monthly'),

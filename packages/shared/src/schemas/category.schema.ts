@@ -20,6 +20,7 @@ export const CategorySchema = z.object({
 
 export const CreateCategorySchema = z.object({
   name: z.string().min(1),
+  ledgerId: z.string().optional(),
   parentId: z.string().nullable().optional(),
   type: CategoryTypeEnum.default('expense'),
   icon: z.string().default('📁'),

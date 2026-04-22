@@ -9,22 +9,64 @@ export const users = sqliteTable('users', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });
 
-export const userProfiles = sqliteTable('user_profiles', {
-  userId: text('user_id').primaryKey().references(() => users.id),
-  payday: integer('payday'), // 1-31
-  budgetMode: text('budget_mode').default('carry_over'), // carry_over, accumulate
-  netWorth: real('net_worth').default(0),
-  disposableIncome: real('disposable_income').default(0),
+export const ledgers = sqliteTable('ledgers', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id).notNull(),
+  name: text('name').notNull(),
+  icon: text('icon').default('📗').notNull(),
+  isDefault: integer('is_default', { mode: 'boolean' }).default(false).notNull(),
+  // 财务核心字段（从 user_profiles 移入）
+  payday: integer('payday'),
+  budgetMode: text('budget_mode').default('carry_over'),
+  disposableIncome: real('disposable_income').default(0).notNull(),
+  savingsAmount: real('savings_amount').default(0).notNull(),
+  emergencyFundAmount: real('emergency_fund_amount').default(0).notNull(),
+  emergencyFundGoal: real('emergency_fund_goal').default(0).notNull(),
+  emergencyFundEnabled: integer('emergency_fund_enabled', { mode: 'boolean' }).default(true).notNull(),
   lastPayday: integer('last_payday', { mode: 'timestamp' }),
-  emergencyFundEnabled: integer('emergency_fund_enabled', { mode: 'boolean' }).default(true),
-  avatarUrl: text('avatar_url'),
+  netWorth: real('net_worth').default(0), // 本账本净资产
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const accounts = sqliteTable('accounts', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id), // 允许为空以支持平滑迁移
+  name: text('name').notNull(),
+  type: text('type').notNull(), // bank, digital, cash, credit
+  balance: real('balance').default(0).notNull(),
+  icon: text('icon').default('💳').notNull(),
+  color: text('color').default('#6C5DD3').notNull(),
+  isDefault: integer('is_default', { mode: 'boolean' }).default(false).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const userProfiles = sqliteTable('user_profiles', {
+  userId: text('user_id').primaryKey().references(() => users.id),
+  avatarUrl: text('avatar_url'),
+  defaultLedgerId: text('default_ledger_id').references(() => ledgers.id),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const savingsLogs = sqliteTable('savings_logs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
+  amount: real('amount').notNull(),
+  type: text('type').notNull(), // transfer_in, transfer_out, draw_emergency, goals_update
+  category: text('category').notNull(), // savings, emergency
+  reason: text('reason'), // Mandatory for draw_emergency
+  date: integer('date', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
 export const categories = sqliteTable('categories', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
   name: text('name').notNull(),
   parentId: text('parent_id'), // null if root category
   type: text('type').notNull(), // income, expense, transfer
@@ -46,11 +88,13 @@ export const tags = sqliteTable('tags', {
 export const transactions = sqliteTable('transactions', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
   amount: real('amount').notNull(),
   categoryId: text('category_id').references(() => categories.id).notNull(),
+  accountId: text('account_id').references(() => accounts.id), // Nullable for now to allow migration
   type: text('type').notNull(), // income, expense, refund
   memo: text('memo'),
-  paymentMethod: text('payment_method'),
+  paymentMethod: text('payment_method'), // Deprecated in favor of account_id
   date: integer('date', { mode: 'timestamp' }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
@@ -77,6 +121,7 @@ export const transactionTags = sqliteTable('transaction_tags', {
 export const budgetPlans = sqliteTable('budget_plans', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
   name: text('name').notNull(),
   totalAmount: real('total_amount').notNull(),
   period: text('period').default('monthly').notNull(), // weekly, monthly, custom
@@ -99,6 +144,7 @@ export const budgetCategories = sqliteTable('budget_categories', {
 export const fixedBills = sqliteTable('fixed_bills', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
   name: text('name').notNull(),
   amount: real('amount').notNull(),
   categoryId: text('category_id').references(() => categories.id),
@@ -112,6 +158,7 @@ export const fixedBills = sqliteTable('fixed_bills', {
 export const payrollEvents = sqliteTable('payroll_events', {
   id: text('id').primaryKey(),
   userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
   salaryAmount: real('salary_amount').notNull(),
   fixedBillsTotal: real('fixed_bills_total').default(0),
   budgetReplenishmentTotal: real('budget_replenishment_total').default(0),
@@ -119,4 +166,76 @@ export const payrollEvents = sqliteTable('payroll_events', {
   date: integer('date', { mode: 'timestamp' }).notNull(),
   snapshot: text('snapshot', { mode: 'json' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const agentProposals = sqliteTable('agent_proposals', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
+  toolName: text('tool_name').notNull(), // e.g. 'create_transaction'
+  arguments: text('arguments', { mode: 'json' }).notNull(),
+  status: text('status').default('pending').notNull(), // pending, accepted, rejected
+  summary: text('summary'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const reviewTasks = sqliteTable('review_tasks', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
+  transactionItemId: text('transaction_item_id').references(() => transactionItems.id).notNull(),
+  status: text('status').default('pending').notNull(), // pending, completed, skipped
+  dueDate: integer('due_date', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const reviewResults = sqliteTable('review_results', {
+  id: text('id').primaryKey(),
+  taskId: text('task_id').references(() => reviewTasks.id).notNull(),
+  rating: integer('rating').notNull(), // 1-5
+  usageFrequency: text('usage_frequency').notNull(), // high, medium, low, never
+  comment: text('comment'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const inventoryItems = sqliteTable('inventory_items', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
+  name: text('name').notNull(),
+  categoryId: text('category_id').references(() => categories.id),
+  unit: text('unit').default('个').notNull(),
+  isConsumable: integer('is_consumable', { mode: 'boolean' }).default(true).notNull(),
+  minStock: real('min_stock').default(0).notNull(),
+  currentStock: real('current_stock').default(0).notNull(),
+  icon: text('icon').default('📦').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const inventoryBatches = sqliteTable('inventory_batches', {
+  id: text('id').primaryKey(),
+  itemId: text('item_id').references(() => inventoryItems.id).notNull(),
+  transactionItemId: text('transaction_item_id').references(() => transactionItems.id),
+  quantity: real('quantity').notNull(),
+  remainingQuantity: real('remaining_quantity').notNull(),
+  unitPrice: real('unit_price'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
+export const wishlistItems = sqliteTable('wishlist_items', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').references(() => users.id).notNull(),
+  ledgerId: text('ledger_id').references(() => ledgers.id),
+  name: text('name').notNull(),
+  amount: real('amount').notNull(),
+  categoryId: text('category_id').references(() => categories.id),
+  status: text('status').default('cooling').notNull(), // cooling, approved, rejected, bought
+  coolingEnd: integer('cooling_end', { mode: 'timestamp' }).notNull(),
+  reason: text('reason'),
+  negotiationLog: text('negotiation_log', { mode: 'json' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
 });

@@ -8,7 +8,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get('me')
-  getMyProfile(): { user: User; profile: UserProfile } {
+  getMyProfile(): { user: User; profile: UserProfile; ledgers: Ledger[] } {
     return this.userService.getMyProfile();
   }
 

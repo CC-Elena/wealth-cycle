@@ -9,25 +9,31 @@
           "id": "M4-A1",
           "description": "极简录入层：自然语言语义识别、分类自动映射、复合消费自动拆单",
           "priority": "highest",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": "M4-A2",
-          "description": "智能洞察层：Health Narrator (生存天数解读)、财务诊断、异常消费预警",
+          "description": "智能洞察层：Health Narrator (生存天数解读)、财务决策支持（边际天数分析）",
           "priority": "highest",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": "M4-A3",
           "description": "主动决策层：Fluid Budgeter (动态预算调剂建议)、The Negotiator (预购/冲动冷静期谈判)",
           "priority": "high",
-          "status": "pending"
+          "status": "done"
+        },
+        {
+          "id": "M2",
+          "description": "订单级录入：支持一笔订单拆分为多个子项并分别入库",
+          "priority": "high",
+          "status": "done"
         },
         {
           "id": "M4-A4",
           "description": "反馈评价层：耐用品使用频率与满意度定期调查回访",
           "priority": "medium",
-          "status": "pending"
+          "status": "done"
         }
       ]
     },
@@ -40,19 +46,92 @@
           "id": "M4-F1",
           "description": "Context Injection 机制：对话自动注入财务快照上下文",
           "priority": "high",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": "M4-F2",
-          "description": "Structured Output 约束：强制 LLM 输出可解析 JSON 意图",
+          "description": "Structured Output 约束：强制 LLM 输出可解析 JSON 意图，支持自我修正",
           "priority": "high",
-          "status": "pending"
+          "status": "done"
         },
         {
           "id": "M4-F3",
-          "description": "Local-First Buffer：Agent 所有提议需经用户确认后写入数据库",
+          "description": "Local-First Buffer：Agent 复杂提议需经用户确认后写入数据库，支持跨会话暂存",
           "priority": "high",
-          "status": "pending"
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "S1",
+      "title": "Phase 1 - 项目基座 (Infrastructure)",
+      "status": "done",
+      "features": [
+        {
+          "id": "S1-F1",
+          "description": "pnpm Monorepo 工作区架构（apps/ server & web, packages/ shared）",
+          "status": "done"
+        },
+        {
+          "id": "S1-F2",
+          "description": "NestJS 后端脚手架搭建：集成 Drizzle ORM 与 SQLite 数据库",
+          "status": "done"
+        },
+        {
+          "id": "S1-F3",
+          "description": "Vite 前端脚手架搭建：React 19 + shadcn/ui + Tailwind v4 适配码",
+          "status": "done"
+        },
+        {
+          "id": "S1-F4",
+          "description": "Shared 共享包建立：Zod Schema 通用类型同步与验证逻辑",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "M1",
+      "title": "Phase 1 - 用户与偏好 (User & Profile)",
+      "status": "done",
+      "features": [
+        {
+          "id": "M1-F1",
+          "description": "实现 User 数据模型、本地用户自动初始化逻辑",
+          "status": "done"
+        },
+        {
+          "id": "M1-F2",
+          "description": "前端 Profile 拉取与管理页面原型展示",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "title": "Phase 1 - 基础收支闭环 (Core Financials)",
+      "status": "done",
+      "features": [
+        {
+          "id": "M3-F1",
+          "description": "Finance 核心模块建立：收支流水数据实体定义",
+          "status": "done"
+        },
+        {
+          "id": "M3-F2",
+          "description": "核心分类系统：实现基础 Income/Expense 分类映射及记账 API",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "Governance - 治理体系方案",
+      "status": "done",
+      "features": [
+        {
+          "id": "S2-F1",
+          "description": "建立 task-workflow-manager Skill 与 Harness (docs/harness) 协作规范",
+          "status": "done"
         }
       ]
     },
@@ -65,140 +144,129 @@
           "id": "S4-F1",
           "description": "集成 SQLCipher 实现本地数据库整库加密",
           "priority": "high",
-          "status": "pending"
+          "status": "done"
         }
       ]
     },
     {
       "id": "M5",
       "title": "固定账单管理 (Fixed Bills)",
-      "status": "in-progress",
+      "status": "done",
       "features": [
         {
           "id": "M5-F1",
-          "description": "固定账单列表展示与前端 CRUD 页面",
+          "description": "固定账单前后端 CRUD 闭环与交互优化",
           "priority": "high",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "S1",
-      "title": "基础设施 (Infrastructure)",
-      "status": "done",
-      "features": [
-        {
-          "id": "S1-F1",
-          "description": "pnpm Monorepo 建立与 NestJS/Vite 环境搭建",
           "status": "done"
         }
       ]
     },
     {
-      "id": "M1",
-      "title": "用户认证与简况 (Auth & Profile)",
+      "id": "Phase3-Inventory",
+      "title": "Phase 3 - 极简库存闭环 (Inventory Loop)",
       "status": "done",
-      "features": [
-        {
-          "id": "M1-F1",
-          "description": "本地用户初始化与基础 Profile 管理",
-          "status": "done"
-        }
-      ]
-    },
-    {
-      "id": "M3",
-      "title": "核心收支逻辑 (Core Transactions)",
-      "status": "done",
-      "features": [
-        {
-          "id": "M3-F1",
-          "description": "实现基础记账功能与分类映射",
-          "status": "done"
-        }
-      ]
-    },
-    {
-      "id": "M2-E",
-      "title": "记账体验增强",
-      "status": "pending",
-      "features": [
-        {
-          "id": "M2-E1",
-          "description": "快捷模板：最近商家建议、子项目组合快捷录入",
-          "priority": "medium",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "M3-E",
-      "title": "预算与发薪增强",
-      "status": "pending",
-      "features": [
-        {
-          "id": "M3-E1",
-          "description": "结算方式切换（结转/积累）、发薪缩减分配模式",
-          "priority": "medium",
-          "status": "pending"
-        }
-      ]
-    },
-    {
-      "id": "M6",
-      "title": "储蓄与应急金管理",
-      "status": "pending",
       "features": [
         {
           "id": "M6-F1",
-          "description": "账户管理与应急金冻结逻辑（含原因历史）",
-          "priority": "medium",
-          "status": "pending"
+          "description": "Inventory 数据模型：实现库存批次管理（Batch）与价格采样逻辑",
+          "priority": "high",
+          "status": "done"
+        },
+        {
+          "id": "M6-A1",
+          "description": "Agent 联动：自动扣减库存（基于记账项）、库存水位异常提醒",
+          "priority": "high",
+          "status": "done"
         }
       ]
     },
     {
-      "id": "M8",
-      "title": "多维报表与监控",
-      "status": "pending",
+      "id": "Phase4-Savings",
+      "title": "Phase 4 - 储蓄与应急金管理 (Savings & Emergency)",
+      "status": "done",
+      "features": [
+        {
+          "id": "M6-F1",
+          "description": "安全资金池：在 UserProfile 中独立维护储蓄与应急金，并建立动用理由日志表",
+          "priority": "high",
+          "status": "done"
+        },
+        {
+          "id": "M6-A1",
+          "description": "安全感量化：Agent 自动计算“安全保障期”并在发薪日建议划拨比例",
+          "priority": "high",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "Phase5-Analysis",
+      "title": "Phase 5 - 详细报表与分析 (Reporting & Analysis)",
+      "status": "done",
       "features": [
         {
           "id": "M8-F1",
-          "description": "流水详情、趋势分析与净资产 (Net Worth) 跟踪",
+          "description": "趋势引擎：实现月度收支对比与分类占比的后端聚合 API",
+          "priority": "high",
+          "status": "done"
+        },
+        {
+          "id": "M8-V1",
+          "description": "分析中心：提供多维度的收支趋势图与分类支出排行榜",
           "priority": "medium",
-          "status": "pending"
+          "status": "done"
         }
       ]
     },
     {
-      "id": "M9",
-      "title": "物资与消耗管理 (库存)",
-      "status": "pending",
+      "id": "Phase 6 - 多账本与外部账户 (Multi-Account & Ledger)",
+      "status": "done",
       "features": [
         {
           "id": "M9-F1",
-          "description": "库存批次管理、保质期提醒与浪费清单展示",
+          "description": "账户体系：支持银行卡、三方支付等物理账户的资产映射",
+          "priority": "high",
+          "status": "done"
+        },
+        {
+          "id": "M9-T1",
+          "description": "转账引擎：实现账户间的原子化资金划转逻辑",
           "priority": "medium",
-          "status": "pending"
+          "status": "done"
+        },
+        {
+          "id": "M9-L1",
+          "description": "多账本隔离：后端 Service 层与数据库 Schema 实现 ledgerId 强制过滤",
+          "priority": "highest",
+          "status": "done"
+        },
+        {
+          "id": "M9-L2",
+          "description": "账本管理 UI：前端实现账本切换、创建及在 Profile 中管理账本群以及 PWA 离线支持",
+          "status": "done"
         }
       ]
     },
     {
-      "id": "M10",
-      "title": "消费控制决策 (预购评估)",
-      "status": "pending",
+      "id": "Phase10-Governance",
+      "title": "Phase 10 - 环境健康与治理 (Governance & Health)",
+      "status": "done",
       "features": [
         {
           "id": "M10-F1",
-          "description": "想买清单、冷静期冻结与 AI 评分评估",
-          "priority": "medium",
-          "status": "pending"
+          "description": "数据库物理备份：实现加密数据库的归档与自动备份逻辑",
+          "status": "done"
+        },
+        {
+          "id": "M10-A1",
+          "description": "Agent 财务侦调：Agent 定期执行对账自检并提议余额校准",
+          "status": "done"
         }
       ]
     }
   ],
   "verification": {
     "command": "pnpm --filter web run dev",
-    "manual_check": "验证 M4-A 是否出现在 feature-list 的首位且内容符合 Agent 能力总结文档"
+    "manual_check": "验证 feature-list 是否详细列出了 Phase 1 (S1, M1, M3, S2) 的所有已完成详细项"
   }
 }
