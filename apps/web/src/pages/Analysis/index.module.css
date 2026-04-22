@@ -1,0 +1,173 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl);
+  padding-bottom: var(--spacing-xl);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.globalBadge {
+  font-size: 10px;
+  background: var(--color-accent);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.chartCard {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardHeader h3 {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.badge {
+  background: #f0f4ff;
+  color: var(--color-accent);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: bold;
+}
+
+.chartWrapper {
+  width: 100%;
+}
+
+.gridRow {
+  display: flex;
+  gap: var(--spacing-md);
+}
+
+.halfCard {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Rank List */
+.rankList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+}
+
+.rankItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-xs);
+  border-bottom: 1px solid #f9f9f9;
+}
+
+.rankInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rankNumber {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  color: #BDB2FF;
+  font-size: var(--font-size-sm);
+  width: 16px;
+}
+
+.rankIcon {
+  font-size: 18px;
+}
+
+.rankName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.rankValue {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.empty {
+  text-align: center;
+  color: var(--color-text-tertiary);
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-lg) 0;
+}
+
+/* Insight Card */
+.insightCard {
+  background: linear-gradient(135deg, #6C5DD3 0%, #8B80F9 100%);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  color: white;
+  box-shadow: 0 10px 20px rgba(108, 93, 211, 0.2);
+}
+
+.insightTitle {
+  font-size: var(--font-size-md);
+  font-weight: bold;
+  margin-bottom: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.insightContent {
+  font-size: var(--font-size-sm);
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.insightHint {
+  margin-top: var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  opacity: 0.7;
+  font-style: italic;
+}
+
+@media (max-width: 600px) {
+  .gridRow {
+    flex-direction: column;
+  }
+}

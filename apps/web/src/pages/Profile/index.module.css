@@ -72,6 +72,41 @@
   margin-top: 4px;
 }
 
+.ledgerShortcut {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+}
+
+.ledgerInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.ledgerLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.ledgerName {
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.switchTxt {
+  color: var(--color-accent);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+}
+
 /* 分组设置项 */
 .sectionBlock {
   display: flex;

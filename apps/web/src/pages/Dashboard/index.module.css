@@ -181,6 +181,62 @@
   flex-shrink: 0;
 }
 
+/* Accounts Section */
+.accountsSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.accountsGrid {
+  display: flex;
+  gap: var(--spacing-sm);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-sm);
+  -webkit-overflow-scrolling: touch;
+}
+
+.accountsGrid::-webkit-scrollbar {
+  display: none;
+}
+
+.accountCard {
+  flex: 0 0 140px;
+  background: white;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+.accCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accCardIcon {
+  font-size: 18px;
+}
+
+.accCardName {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accCardBalance {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
 /* Overview Section */
 .overviewSection {
   display: flex;
@@ -199,6 +255,75 @@
   display: flex;
   gap: var(--spacing-md);
   margin-top: var(--spacing-md);
+}
+
+.sectionHeader {
+  margin-top: var(--spacing-md);
+  position: relative;
+}
+
+.wishlistLink {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  background: rgba(108, 93, 211, 0.05);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.healthShield {
+  position: absolute;
+  right: 80px; /* 放在愿望清单左侧 */
+  top: 0;
+  cursor: pointer;
+  font-size: 18px;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
+.healthModal {
+  padding: var(--spacing-lg);
+}
+
+.checkItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-bg-alt);
+}
+
+.checkName {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.checkStatus {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.pass { color: #38A169; background: rgba(72, 187, 120, 0.1); }
+.error { color: #E53E3E; background: rgba(245, 101, 101, 0.1); }
+
+.mismatchBanner {
+  background: #FFF5F5;
+  border: 1px solid #FEB2B2;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  color: #C53030;
+  font-size: var(--font-size-xs);
 }
 
 .btn {
@@ -271,6 +396,43 @@
   color: var(--color-text-tertiary);
 }
 
+.accountSelection {
+  display: flex;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.accountSelection::-webkit-scrollbar {
+  display: none;
+}
+
+.accountPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--color-bg-card);
+  border-radius: 20px;
+  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.activeAccount {
+  background: rgba(108, 93, 211, 0.1);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.accIcon {
+  font-size: 16px;
+}
+
 .categoryScroll {
   display: flex;
   flex-wrap: wrap;
@@ -317,6 +479,98 @@
 
 .customKeyboard {
   --adm-color-primary: var(--color-accent);
+}
+
+.splitHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.splitTitle {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.splitToggle {
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  cursor: pointer;
+  padding: 4px 8px;
+  background: rgba(108, 93, 211, 0.05);
+  border-radius: var(--radius-sm);
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 200px;
+  overflow-y: auto;
+  padding: var(--spacing-xs) 0;
+}
+
+.itemRow {
+  display: flex;
+  gap: var(--spacing-xs);
+  align-items: center;
+  background: var(--color-bg-card);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.itemField {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: var(--font-size-sm);
+  outline: none;
+  min-width: 0;
+}
+
+.itemAmount {
+  width: 70px;
+  text-align: right;
+  font-weight: 600;
+}
+
+.itemInventoryToggle {
+  font-size: 16px;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.inventoryActive {
+  opacity: 1;
+  color: var(--color-accent);
+}
+
+.removeBtn {
+  color: #ff4d4f;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.addItemBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: var(--spacing-sm);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
 }
 
 /* 发薪弹层样式 */
@@ -479,4 +733,144 @@
   font-family: monospace;
   font-weight: 500;
   color: var(--color-text-primary);
+}
+
+/* Vault Section */
+.vaultSection {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.vaultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.vaultIcon {
+  font-size: 32px;
+  opacity: 0.9;
+}
+
+.vaultBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.vaultMain {
+  text-align: left;
+}
+
+.vaultValue {
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--color-text-primary);
+}
+
+.vaultLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.vaultProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vaultProgressText {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+}
+
+.vaultGoal {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-align: right;
+  margin-top: 4px;
+}
+
+.savingsInfo {
+  padding-top: var(--spacing-sm);
+  border-top: 1px dashed var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* Ledger Switcher Modal */
+.ledgerModal {
+  padding: var(--spacing-md) 0 var(--spacing-lg);
+}
+
+.ledgerModal h3 {
+  margin-bottom: var(--spacing-lg);
+  padding: 0 var(--spacing-md);
+  font-size: 20px;
+}
+
+.ledgerList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding: 0 var(--spacing-md);
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.ledgerItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.ledgerItem:active {
+  transform: scale(0.98);
+}
+
+.ledgerItem.active {
+  border-color: var(--color-accent);
+  background: rgba(108, 93, 211, 0.05);
+  box-shadow: 0 4px 12px rgba(108, 93, 211, 0.08);
+}
+
+.ledgerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ledgerName {
+  font-weight: 700;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+}
+
+.ledgerType {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.activeLabel {
+  font-size: 11px;
+  background: var(--color-accent);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
 }

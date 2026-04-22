@@ -1,13 +1,99 @@
 import { useState, useRef, useEffect } from 'react';
 import { Popup, Button, Input, TextArea, Toast, SpinLoading } from 'antd-mobile';
 import { useFinanceStore } from '../../stores/financeStore';
-import { X, Send, Robot, User } from 'lucide-react';
+import { X, Send, Robot, User, Star } from 'lucide-react';
 import styles from './ChatPanel.module.css';
+import ky from 'ky';
 
 interface ChatPanelProps {
   visible: boolean;
   onClose: () => void;
 }
+
+const ReviewCard = ({ taskId, itemName, onSuccess }: { taskId: string; itemName: string; onSuccess: () => void }) => {
+  const [rating, setRating] = useState(0);
+  const [freq, setFreq] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async () => {
+    if (rating === 0 || !freq || loading) return;
+    setLoading(true);
+    try {
+      await ky.post('/api/agent/reviews', {
+        json: { taskId, rating, usageFrequency: freq }
+      });
+      setSubmitted(true);
+      onSuccess();
+      Toast.show({ content: '感谢您的评价！', icon: 'success' });
+    } catch (err) {
+      Toast.show({ content: '提交失败，请重试', icon: 'fail' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className={`${styles.proposalCard} ${styles.reviewCard}`}>
+        <div className={styles.processedText}>已完成评价，感谢反馈 ✨</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`${styles.proposalCard} ${styles.reviewCard}`}>
+      <div className={styles.reviewTitle}>
+        <span>满意度回访调查</span>
+        <Star size={16} fill="#faad14" color="#faad14" />
+      </div>
+      <div className={styles.proposalInfo}>
+        <div style={{ marginBottom: '12px' }}>您对项目 <b>{itemName}</b> 的体验如何？</div>
+        
+        <div className={styles.reviewField}>
+          <div className={styles.fieldLabel}>星级评价</div>
+          <div className={styles.ratingGroup}>
+            {[1, 2, 3, 4, 5].map(num => (
+              <Star 
+                key={num} 
+                className={styles.ratingStar}
+                size={24} 
+                fill={num <= rating ? "#faad14" : "none"}
+                color={num <= rating ? "#faad14" : "#ddd"}
+                onClick={() => setRating(num)}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.reviewField}>
+          <div className={styles.fieldLabel}>使用频率</div>
+          <div className={styles.freqGroup}>
+            {['high', 'medium', 'low', 'never'].map(f => (
+              <div 
+                key={f} 
+                className={`${styles.freqTag} ${freq === f ? styles.freqTagActive : ''}`}
+                onClick={() => setFreq(f)}
+              >
+                {f === 'high' ? '经常' : f === 'medium' ? '偶尔' : f === 'low' ? '极少' : '从不'}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <Button 
+        block 
+        color="primary" 
+        size="small" 
+        loading={loading}
+        disabled={rating === 0 || !freq}
+        onClick={handleSubmit}
+      >
+        提交评价
+      </Button>
+    </div>
+  );
+};
 
 export const ChatPanel = ({ visible, onClose }: ChatPanelProps) => {
   const store = useFinanceStore();
@@ -34,17 +120,36 @@ export const ChatPanel = ({ visible, onClose }: ChatPanelProps) => {
   };
 
   const handleAcceptProposal = async (toolCall: any) => {
-    const args = JSON.parse(toolCall.function.arguments);
     try {
-      await store.createTransactionOnServer({
-        amount: args.amount,
-        categoryId: args.categoryId,
-        type: args.type,
-        memo: args.memo,
-      });
+      if (toolCall.proposalId) {
+        await store.executeProposalOnServer(toolCall.proposalId);
+      } else {
+        const args = JSON.parse(toolCall.function.arguments);
+        await store.createTransactionOnServer({
+          amount: args.amount,
+          categoryId: args.categoryId,
+          type: args.type,
+          memo: args.memo,
+          items: args.items,
+        });
+      }
       Toast.show({
         icon: 'success',
         content: '记录成功！',
+      });
+    } catch (err) {
+      Toast.show({
+        icon: 'fail',
+        content: '操作失败',
+      });
+    }
+  };
+
+  const handleRejectProposal = async (proposalId: string) => {
+    try {
+      await store.rejectProposalOnServer(proposalId);
+      Toast.show({
+        content: '已忽略该提议',
       });
     } catch (err) {
       Toast.show({
@@ -97,29 +202,272 @@ export const ChatPanel = ({ visible, onClose }: ChatPanelProps) => {
                   if (tc.function.name === 'create_transaction') {
                     const args = JSON.parse(tc.function.arguments);
                     const cat = store.categories.find(c => c.id === args.categoryId);
+                    const proposal = tc.proposalId ? store.pendingProposals.find(p => p.id === tc.proposalId) : null;
+                    const isProcessed = tc.proposalId && !proposal; // 如果有 ID 但不在 pending 列表中，说明已处理
+
                     return (
-                        <div key={tc.id} className={styles.proposalCard}>
+                        <div key={tc.id} className={`${styles.proposalCard} ${args.isImpulse ? styles.impulseCard : ''}`}>
                           <div className={styles.proposalHeader}>
-                            <span>记账提议</span>
-                            <span className={args.type === 'expense' ? 'text-red-500' : 'text-green-500'}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span>{tc.proposalId ? '暂存提议' : '快捷记录'}</span>
+                              {args.isImpulse && <span className={styles.warningBadge}>冷静期建议</span>}
+                            </div>
+                            <span className={args.type === 'expense' ? styles.expenseText : styles.incomeText}>
                               {args.type === 'expense' ? '-' : '+'}¥{args.amount}
                             </span>
                           </div>
                           <div className={styles.proposalInfo}>
                             <div>分类：{cat?.name || '未知'} {cat?.icon}</div>
                             {args.memo && <div>备注：{args.memo}</div>}
+
+                            {args.isImpulse && (
+                              <div className={styles.warningText}>
+                                ⚠️ 本次支出超过您可支配资金的 80%，建议冷静。
+                              </div>
+                            )}
+
+                            {args.items && args.items.length > 0 && (
+                              <div className={styles.itemsList}>
+                                <div className={styles.itemsHeader}>包含子项：</div>
+                                {args.items.map((item: any, i: number) => (
+                                  <div key={i} className={styles.itemRow}>
+                                    <span>{item.name} {item.quantity > 1 ? `x${item.quantity}` : ''}</span>
+                                    <span>¥{item.amount}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          <Button
-                            block
-                            color="primary"
-                            size="small"
-                            onClick={() => handleAcceptProposal(tc)}
-                          >
-                            确认记录
-                          </Button>
+                          
+                          {isProcessed ? (
+                            <div className={styles.processedText}>已确认入账</div>
+                          ) : (
+                            <div className={styles.actionGroup}>
+                              <Button
+                                block
+                                color={args.isImpulse ? "default" : "primary"}
+                                size="small"
+                                onClick={() => handleAcceptProposal(tc)}
+                              >
+                                {args.isImpulse ? "跳过冷静期并买入" : "确认记录"}
+                              </Button>
+                              {tc.proposalId && (
+                                <Button
+                                  block
+                                  size="small"
+                                  onClick={() => handleRejectProposal(tc.proposalId)}
+                                >
+                                  {args.isImpulse ? "暂不购买" : "忽略"}
+                                </Button>
+                              )}
+                            </div>
+                          )}
                         </div>
                     );
                   }
+
+                  if (tc.function.name === 'reallocate_budget') {
+                    const args = JSON.parse(tc.function.arguments);
+                    const fromBudget = store.budgets.find(b => b.id === args.fromBudgetId);
+                    const toBudget = store.budgets.find(b => b.id === args.toBudgetId);
+                    const proposal = tc.proposalId ? store.pendingProposals.find(p => p.id === tc.proposalId) : null;
+                    const isProcessed = tc.proposalId && !proposal;
+
+                    return (
+                      <div key={tc.id} className={styles.proposalCard}>
+                        <div className={styles.proposalHeader}>
+                          <span>预算调剂提议</span>
+                          <span className={styles.incomeText}>¥{args.amount}</span>
+                        </div>
+                        <div className={styles.proposalInfo}>
+                          <div className={styles.reallocRow}>
+                            <span className={styles.reallocLabel}>从：</span>
+                            <span>{fromBudget?.name || '未知'}</span>
+                          </div>
+                          <div className={styles.reallocRow}>
+                            <span className={styles.reallocLabel}>到：</span>
+                            <span>{toBudget?.name || '未知'}</span>
+                          </div>
+                          {args.reason && <div className={styles.reasonText}>{args.reason}</div>}
+                        </div>
+
+                        {isProcessed ? (
+                          <div className={styles.processedText}>已执行调剂</div>
+                        ) : (
+                          <div className={styles.actionGroup}>
+                            <Button
+                              block
+                              color="primary"
+                              size="small"
+                              onClick={() => handleAcceptProposal(tc)}
+                            >
+                              确认调剂
+                            </Button>
+                            <Button
+                              block
+                              size="small"
+                              onClick={() => handleRejectProposal(tc.proposalId)}
+                            >
+                              忽略
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  if (tc.function.name === 'submit_review') {
+                    const args = JSON.parse(tc.function.arguments);
+                    return (
+                      <ReviewCard 
+                        key={tc.id} 
+                        taskId={args.taskId} 
+                        itemName={args.itemName} 
+                        onSuccess={() => {}} 
+                      />
+                    );
+                  }
+
+                  if (tc.function.name === 'consume_item') {
+                    const args = JSON.parse(tc.function.arguments);
+                    const proposal = tc.proposalId ? store.pendingProposals.find(p => p.id === tc.proposalId) : null;
+                    const isProcessed = tc.proposalId && !proposal;
+
+                    return (
+                      <div key={tc.id} className={styles.proposalCard}>
+                        <div className={styles.proposalHeader}>
+                          <span>库存消耗提议</span>
+                          <span className={styles.expenseText}>-{args.quantity}</span>
+                        </div>
+                        <div className={styles.proposalInfo}>
+                          <div className={styles.reallocRow}>
+                            <span className={styles.reallocLabel}>物项：</span>
+                            <span>{args.itemName}</span>
+                          </div>
+                          <div className={styles.reallocRow}>
+                            <span className={styles.reallocLabel}>操作：</span>
+                            <span>标记为已消耗</span>
+                          </div>
+                        </div>
+
+                        {isProcessed ? (
+                          <div className={styles.processedText}>已确认消耗</div>
+                        ) : (
+                          <div className={styles.actionGroup}>
+                            <Button
+                              block
+                              color="primary"
+                              size="small"
+                              onClick={() => handleAcceptProposal(tc)}
+                            >
+                              确认消耗
+                            </Button>
+                            <Button
+                              block
+                              size="small"
+                              onClick={() => handleRejectProposal(tc.proposalId)}
+                            >
+                              忽略
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  if (tc.function.name === 'transfer_to_savings') {
+                    const args = JSON.parse(tc.function.arguments);
+                    const proposal = tc.proposalId ? store.pendingProposals.find(p => p.id === tc.proposalId) : null;
+                    const isProcessed = tc.proposalId && !proposal;
+
+                    return (
+                      <div key={tc.id} className={styles.proposalCard}>
+                        <div className={styles.proposalHeader}>
+                          <span>资金划转提议</span>
+                          <span className={styles.incomeText}>¥{args.amount}</span>
+                        </div>
+                        <div className={styles.proposalInfo}>
+                          <div className={styles.reallocRow}>
+                            <span className={styles.reallocLabel}>目标：</span>
+                            <span>{args.category === 'emergency' ? '应急金' : '储蓄'}</span>
+                          </div>
+                          {args.reason && <div className={styles.reasonText}>{args.reason}</div>}
+                        </div>
+
+                        {isProcessed ? (
+                          <div className={styles.processedText}>已执行划转</div>
+                        ) : (
+                          <div className={styles.actionGroup}>
+                            <Button
+                              block
+                              color="primary"
+                              size="small"
+                              onClick={() => handleAcceptProposal(tc)}
+                            >
+                              确认划转
+                            </Button>
+                            <Button
+                              block
+                              size="small"
+                              onClick={() => handleRejectProposal(tc.proposalId)}
+                            >
+                              忽略
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  if (tc.function.name === 'withdraw_emergency_fund') {
+                    const args = JSON.parse(tc.function.arguments);
+                    const proposal = tc.proposalId ? store.pendingProposals.find(p => p.id === tc.proposalId) : null;
+                    const isProcessed = tc.proposalId && !proposal;
+
+                    return (
+                      <div key={tc.id} className={`${styles.proposalCard} ${styles.impulseCard}`}>
+                        <div className={styles.proposalHeader}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span>应急金提取请求</span>
+                            <span className={styles.warningBadge}>风险操作</span>
+                          </div>
+                          <span className={styles.expenseText}>¥{args.amount}</span>
+                        </div>
+                        <div className={styles.proposalInfo}>
+                          <div className={styles.warningText}>
+                            ⚠️ 提取应急金将降低您的防风险能力。
+                          </div>
+                          <div className={styles.reallocRow}>
+                            <span className={styles.reallocLabel}>理由：</span>
+                            <span style={{ color: '#E53E3E', fontWeight: 600 }}>{args.reason}</span>
+                          </div>
+                        </div>
+
+                        {isProcessed ? (
+                          <div className={styles.processedText}>已记录动用理由</div>
+                        ) : (
+                          <div className={styles.actionGroup}>
+                            <Button
+                              block
+                              color="danger"
+                              size="small"
+                              onClick={() => handleAcceptProposal(tc)}
+                            >
+                              确认提取
+                            </Button>
+                            <Button
+                              block
+                              size="small"
+                              onClick={() => handleRejectProposal(tc.proposalId)}
+                            >
+                              取消
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
                   return null;
                 })}
               </div>

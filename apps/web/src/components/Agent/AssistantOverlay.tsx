@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Badge } from 'antd-mobile';
 import { MessageCircle } from 'lucide-react';
 import { ChatPanel } from './ChatPanel';
+import { useFinanceStore } from '../../stores/financeStore';
 
 export const AssistantOverlay = () => {
   const [visible, setVisible] = useState(false);
+  const { pendingProposals, fetchProposals } = useFinanceStore();
+
+  useEffect(() => {
+    fetchProposals();
+  }, []);
 
   return (
     <>
@@ -12,7 +19,6 @@ export const AssistantOverlay = () => {
         style={{
           position: 'fixed',
           bottom: '86px',
-          // 逻辑：在宽屏下尽量贴合 480px 容器右侧，在窄屏下距离右边 16px
           right: 'max(16px, calc((100vw - 480px) / 2 + 16px))',
           width: '56px',
           height: '56px',
@@ -27,7 +33,9 @@ export const AssistantOverlay = () => {
           transition: 'transform 0.2s',
         }}
       >
-        <MessageCircle size={28} color="white" />
+        <Badge content={pendingProposals.length > 0 ? pendingProposals.length : null} style={{ '--right': '2px', '--top': '2px' }}>
+          <MessageCircle size={28} color="white" />
+        </Badge>
       </div>
 
       <ChatPanel visible={visible} onClose={() => setVisible(false)} />

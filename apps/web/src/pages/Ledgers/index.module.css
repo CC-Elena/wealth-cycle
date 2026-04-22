@@ -1,0 +1,147 @@
+.content {
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ledgerList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.ledgerCard {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.ledgerCard.active {
+  border-color: var(--color-accent);
+  background: rgba(108, 93, 211, 0.02);
+  box-shadow: 0 4px 12px rgba(108, 93, 211, 0.1);
+}
+
+.globalCard {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f7ff 100%);
+  border: 1px dashed var(--color-accent);
+}
+
+.globalCard.active {
+  background: linear-gradient(135deg, rgba(108, 93, 211, 0.05) 0%, rgba(108, 93, 211, 0.02) 100%);
+  border: 1px solid var(--color-accent);
+}
+
+.ledgerIcon {
+  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ledgerMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ledgerHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.name {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.badge {
+  font-size: 10px;
+  background: var(--color-accent);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.ledgerBalance {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+}
+
+.checkIcon {
+  color: var(--color-text-tertiary);
+  font-size: 18px;
+}
+
+.active .checkIcon {
+  color: var(--color-accent);
+  font-weight: bold;
+}
+
+.addBtn {
+  margin-top: var(--spacing-md);
+  --background-color: var(--color-accent);
+}
+
+.modalContent {
+  padding: var(--spacing-md) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.modalContent h3 {
+  margin: 0;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+}
+
+.modalInput {
+  --font-size: var(--font-size-md);
+  border-bottom: 1px solid var(--color-border);
+  padding: 8px 0;
+}
+
+.loadingOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  color: white;
+  gap: var(--spacing-md);
+}
+
+.loadingOverlay p {
+  margin: 0;
+  font-size: var(--font-size-sm);
+}

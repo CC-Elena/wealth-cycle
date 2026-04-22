@@ -2,10 +2,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './index.module.css';
 
 const tabs = [
-  { key: '/', label: '控制台', icon: '📊' },
+  { key: '/', label: '控制台', icon: '🏠' },
+  { key: '/analysis', label: '分析', icon: '📈' },
   { key: '/transactions', label: '流水', icon: '📝' },
   { key: '/inventory', label: '库存', icon: '📦' },
-  { key: '/categories', label: '分类', icon: '🏷️' },
   { key: '/profile', label: '我的', icon: '👤' },
 ];
 

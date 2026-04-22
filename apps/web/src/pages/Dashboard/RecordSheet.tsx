@@ -13,26 +13,52 @@ export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [memo, setMemo] = useState('');
   const categories = useFinanceStore((s) => s.categories);
+  const accounts = useFinanceStore((s) => s.accounts);
   const createTransactionOnServer = useFinanceStore((s) => s.createTransactionOnServer);
+  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [isSplit, setIsSplit] = useState(false);
+  const [items, setItems] = useState<Array<{ name: string; amount: string; categoryId: string; shouldInventory: boolean }>>([]);
 
   // 只展示活跃分类
   const activeCategories = categories.filter((c) => c.isActive);
 
-  // 首次渲染时若还没选中，则默认选第一个
   if (!selectedCategoryId && activeCategories.length > 0) {
     setSelectedCategoryId(activeCategories[0].id);
   }
 
+  if (!selectedAccountId && accounts.length > 0) {
+    const defaultAcc = accounts.find(a => a.isDefault) || accounts[0];
+    setSelectedAccountId(defaultAcc.id);
+  }
+
   const handleInput = (v: string) => {
+    if (isSplit) return; // 拆分模式下主金额只读
     if (v === 'BACKSPACE') {
       setAmount((prev) => (prev.length > 1 ? prev.slice(0, -1) : '0'));
     } else if (v === '.') {
-      // 防止重复小数点
       if (amount.includes('.')) return;
       setAmount((prev) => prev + '.');
     } else {
       setAmount((prev) => (prev === '0' ? v : prev + v));
     }
+  };
+
+  const handleAddItem = () => {
+    setItems([...items, { name: '', amount: '', categoryId: selectedCategoryId, shouldInventory: false }]);
+  };
+
+  const removeItem = (idx: number) => {
+    setItems(items.filter((_, i) => i !== idx));
+  };
+
+  const updateItem = (idx: number, field: string, val: any) => {
+    const newItems = [...items];
+    newItems[idx] = { ...newItems[idx], [field]: val };
+    setItems(newItems);
+    
+    // 实时汇总金额
+    const total = newItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+    setAmount(total.toFixed(2));
   };
 
   const handleConfirm = async () => {
@@ -47,12 +73,24 @@ export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
     }
 
     try {
-      await createTransactionOnServer({
+      const payload: any = {
         amount: num,
         categoryId: selectedCategoryId,
+        accountId: selectedAccountId || undefined,
         type: 'expense',
         memo: memo || undefined,
-      });
+      };
+
+      if (isSplit && items.length > 0) {
+        payload.items = items.map(it => ({
+          name: it.name || '未命名项目',
+          amount: parseFloat(it.amount) || 0,
+          categoryId: it.categoryId,
+          shouldInventory: it.shouldInventory
+        }));
+      }
+
+      await createTransactionOnServer(payload);
       Toast.show({ icon: 'success', content: '记账成功' });
       setAmount('0');
       setMemo('');
@@ -87,6 +125,67 @@ export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
           />
+        </div>
+
+        {/* 拆分切换 */}
+        <div className={styles.splitHeader}>
+          <span className={styles.splitTitle}>{isSplit ? '拆项目明细' : '快速记账'}</span>
+          <span 
+            className={styles.splitToggle}
+            onClick={() => setIsSplit(!isSplit)}
+          >
+            {isSplit ? '返回常规' : '拆分项目'}
+          </span>
+        </div>
+
+        {/* 子项列表 */}
+        {isSplit && (
+          <div className={styles.itemsList}>
+            {items.map((item, idx) => (
+              <div key={idx} className={styles.itemRow}>
+                <input 
+                  className={styles.itemField} 
+                  placeholder="品名" 
+                  value={item.name}
+                  onChange={(e) => updateItem(idx, 'name', e.target.value)}
+                />
+                <input 
+                  className={`${styles.itemField} ${styles.itemAmount}`} 
+                  placeholder="金额" 
+                  type="number"
+                  value={item.amount}
+                  onChange={(e) => updateItem(idx, 'amount', e.target.value)}
+                />
+                <span 
+                  className={`${styles.itemInventoryToggle} ${item.shouldInventory ? styles.inventoryActive : ''}`}
+                  onClick={() => updateItem(idx, 'shouldInventory', !item.shouldInventory)}
+                >
+                  📦
+                </span>
+                <span className={styles.removeBtn} onClick={() => removeItem(idx)}>✕</span>
+              </div>
+            ))}
+            <div className={styles.addItemBtn} onClick={handleAddItem}>
+              + 添加子项
+            </div>
+          </div>
+        )}
+
+        {/* 账户选择 */}
+        <div className={styles.accountSelection}>
+          {accounts.map((acc) => {
+            const isAccActive = selectedAccountId === acc.id;
+            return (
+              <div 
+                key={acc.id}
+                className={`${styles.accountPill} ${isAccActive ? styles.activeAccount : ''}`}
+                onClick={() => setSelectedAccountId(acc.id)}
+              >
+                <span className={styles.accIcon}>{acc.icon}</span>
+                <span className={styles.accName}>{acc.name}</span>
+              </div>
+            );
+          })}
         </div>
 
         {/* 分类网格 — 从后端拉取 */}

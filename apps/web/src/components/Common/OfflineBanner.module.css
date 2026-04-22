@@ -1,0 +1,39 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  animation: slideDown 0.3s ease-out;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.offline {
+  background: #f56565; /* Red */
+}
+
+.syncing {
+  background: #6c5dd3; /* Purple */
+}
+
+.icon {
+  font-size: 16px;
+}
+
+.text {
+  letter-spacing: 0.5px;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

@@ -86,4 +86,7 @@ export interface UserProfile extends Omit<SharedUserProfile, 'name'> {
   payrollCycleDays: number;
   monthlyIncomePrediction: number; // 预估月薪
   lastPayrollDate: string;
+  savingsAmount: number;
+  emergencyFundAmount: number;
+  emergencyFundGoal: number;
 }

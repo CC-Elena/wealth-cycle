@@ -1,0 +1,157 @@
+.container {
+  padding-bottom: 80px;
+}
+
+.header {
+  padding: var(--spacing-md) var(--spacing-sm);
+  background: white;
+}
+
+.backBtn {
+  padding: 0;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.title {
+  font-size: var(--font-size-xl);
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.section {
+  margin-top: var(--spacing-lg);
+  padding: 0 var(--spacing-sm);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text);
+}
+
+.itemsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.itemCard {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.itemIcon {
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  background: var(--color-bg-alt);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.itemMeta {
+  flex: 1;
+}
+
+.itemName {
+  font-weight: 700;
+  font-size: var(--font-size-md);
+}
+
+.itemAmount {
+  color: var(--color-accent);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+.countdown {
+  font-size: var(--font-size-xs);
+  color: #F6AD55;
+  background: rgba(246, 173, 85, 0.1);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.reasonBox {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-alt);
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.progressSection {
+  margin-bottom: var(--spacing-md);
+}
+
+.actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.actions button {
+  flex: 1;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.historyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-md);
+}
+
+.historyName {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.statusPill {
+  font-size: var(--font-size-xs);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.bought {
+  background: rgba(72, 187, 120, 0.1);
+  color: #38A169;
+}
+
+.rejected {
+  background: rgba(245, 101, 101, 0.1);
+  color: #E53E3E;
+}

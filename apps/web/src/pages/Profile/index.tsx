@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Switch, Toast } from 'antd-mobile';
+import { useNavigate } from 'react-router-dom';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
 import ky from 'ky';
@@ -7,6 +8,7 @@ import { UserSchema } from '@stock/shared';
 
 const Profile = () => {
   const store = useFinanceStore();
+  const navigate = useNavigate();
   const [apiResult, setApiResult] = useState<string>('');
 
   const handleTestApi = async () => {
@@ -39,8 +41,18 @@ const Profile = () => {
         </div>
         <div className={styles.passportNetWorth}>净资产 (Net Worth)</div>
         <div className={styles.passportAmount}>
-          ¥{store.profile.netWorth.toLocaleString()}
+          ¥{store.ledgers.find(l => l.id === store.currentLedgerId)?.netWorth?.toLocaleString() || '0'}
         </div>
+      </div>
+
+      <div className={styles.ledgerShortcut} onClick={() => navigate('/ledgers')}>
+        <div className={styles.ledgerInfo}>
+          <div className={styles.ledgerLabel}>当前账本</div>
+          <div className={styles.ledgerName}>
+            {store.ledgers.find(l => l.id === store.currentLedgerId)?.icon} {store.ledgers.find(l => l.id === store.currentLedgerId)?.name || '未选择'}
+          </div>
+        </div>
+        <div className={styles.switchTxt}>切换 ❯</div>
       </div>
 
       <div className={styles.sectionBlock}>
@@ -51,14 +63,14 @@ const Profile = () => {
             <div className={styles.itemText}>个人资料</div>
             <div className={styles.itemRight}>❯</div>
           </div>
-          <div className={styles.listItem}>
-            <div className={styles.itemIcon}>🛡️</div>
-            <div className={styles.itemText}>安全与隐私</div>
+          <div className={styles.listItem} onClick={() => navigate('/bills')}>
+            <div className={styles.itemIcon}>🧾</div>
+            <div className={styles.itemText}>固定账单管理</div>
             <div className={styles.itemRight}>❯</div>
           </div>
           <div className={styles.listItem}>
-            <div className={styles.itemIcon}>📄</div>
-            <div className={styles.itemText}>订阅服务</div>
+            <div className={styles.itemIcon}>🛡️</div>
+            <div className={styles.itemText}>安全与隐私</div>
             <div className={styles.itemRight}>❯</div>
           </div>
         </div>
