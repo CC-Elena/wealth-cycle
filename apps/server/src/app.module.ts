@@ -1,9 +1,11 @@
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DatabaseModule } from './database/database.module';
-import { UserModule } from './modules/user/user.module';
-import { FinanceModule } from './modules/finance/finance.module';
 import { AgentModule } from './modules/agent/agent.module';
+import { FinanceModule } from './modules/finance/finance.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { SyncModule } from './modules/sync/sync.module';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
@@ -12,7 +14,10 @@ import { AgentModule } from './modules/agent/agent.module';
     UserModule,
     FinanceModule,
     AgentModule,
+    SyncModule,
+    NotificationModule,
   ],
+
   controllers: [],
   providers: [],
 })

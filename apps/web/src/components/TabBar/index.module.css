@@ -1,19 +1,21 @@
 .tabbar {
   position: fixed;
-  bottom: 0;
+  bottom: calc(var(--safe-area-bottom) + 12px);
   left: 50%;
   transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
-  height: var(--tabbar-height);
-  padding-bottom: var(--safe-area-bottom);
+  width: calc(100% - 24px);
+  max-width: 440px;
+  height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  background: var(--color-bg-card);
-  border-top: 1px solid var(--color-border);
-  backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(239, 239, 239, 0.5);
+  border-radius: 34px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(20px);
   z-index: 100;
+  padding: 0 10px;
 }
 
 .tab {

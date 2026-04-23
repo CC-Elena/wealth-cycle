@@ -1,11 +1,11 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { eq, and, sql } from 'drizzle-orm';
+import { Inject, Injectable } from '@nestjs/common';
+import type { CreateFixedBill, CreatePayrollEvent } from '@stock/shared';
+import { and, eq, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { CreatePayrollEvent, CreateFixedBill } from '@stock/shared';
-import { BudgetService } from './budget.service';
-import { AccountService } from './account.service';
+import type { AccountService } from './account.service';
+import type { BudgetService } from './budget.service';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 

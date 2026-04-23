@@ -1,9 +1,9 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../../database/schema';
-import { eq, and, gt, sql, isNull, lt } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ReviewService {
@@ -42,7 +42,7 @@ export class ReviewService {
 
     for (const item of items) {
       await this.db.insert(schema.reviewTasks).values({
-        id: uuidv4(),
+        id: randomUUID(),
         userId,
         ledgerId, // 绑定账本
         transactionItemId: item.itemId,
@@ -56,7 +56,16 @@ export class ReviewService {
     return items.length;
   }
 
-  async getPendingTasks(userId: string, ledgerId: string) {
+  async getPendingTasks(userId: string, ledgerId?: string) {
+    const filters = [
+      eq(schema.reviewTasks.userId, userId),
+      eq(schema.reviewTasks.status, 'pending')
+    ];
+
+    if (ledgerId && ledgerId !== 'global') {
+      filters.push(eq(schema.reviewTasks.ledgerId, ledgerId));
+    }
+
     return this.db
       .select({
         taskId: schema.reviewTasks.id,
@@ -66,17 +75,13 @@ export class ReviewService {
       .from(schema.reviewTasks)
       .innerJoin(schema.transactionItems, eq(schema.reviewTasks.transactionItemId, schema.transactionItems.id))
       .innerJoin(schema.transactions, eq(schema.transactionItems.transactionId, schema.transactions.id))
-      .where(and(
-        eq(schema.reviewTasks.userId, userId), 
-        eq(schema.reviewTasks.ledgerId, ledgerId),
-        eq(schema.reviewTasks.status, 'pending')
-      ));
+      .where(and(...filters));
   }
 
   async submitReview(taskId: string, rating: number, usageFrequency: string, comment?: string) {
     await this.db.transaction(async (tx) => {
       await tx.insert(schema.reviewResults).values({
-        id: uuidv4(),
+        id: randomUUID(),
         taskId,
         rating,
         usageFrequency,

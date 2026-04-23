@@ -1,0 +1,118 @@
+.container {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding-top: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  margin-bottom: 24px;
+}
+
+.backBtn,
+.addBtn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #333;
+  padding: 8px 0;
+  font-weight: 500;
+}
+
+.backBtn {
+  font-size: 24px;
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.list {
+  padding: 0 20px;
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+  margin-top: 40px;
+}
+
+.accountCard {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.accountIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-right: 16px;
+}
+
+.accountInfo {
+  flex: 1;
+}
+
+.accountName {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tag {
+  font-size: 10px;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #666;
+}
+
+.accountBalance {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.actions button {
+  background: #f5f5f5;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.actions button.danger {
+  color: #ff4d4f;
+  background: #fff1f0;
+}
+
+.formContainer {
+  padding: 24px 16px;
+}
+
+.formContainer h3 {
+  margin: 0 0 16px 8px;
+  font-size: 18px;
+}

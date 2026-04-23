@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { Button, Modal, Toast } from 'antd-mobile';
 import ReactECharts from 'echarts-for-react';
-import { Modal, Button, Toast } from 'antd-mobile';
-import { useFinanceStore } from '../../stores/financeStore';
-import { RecordSheet } from './RecordSheet';
-import { PayrollGuidance } from './PayrollGuidance';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { NotificationHub } from '../../components/Common/NotificationHub';
+import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
+import { PayrollGuidance } from './PayrollGuidance';
+import { RecordSheet } from './RecordSheet';
 
 const Dashboard = () => {
   const store = useFinanceStore();
@@ -23,6 +24,7 @@ const Dashboard = () => {
     store.fetchHealthStats();
     store.fetchWishlist();
     store.fetchHealthReport();
+    store.fetchPredictions();
   }, []);
 
   // 组装给 ECharts 的数据集
@@ -56,27 +58,42 @@ const Dashboard = () => {
   return (
     <div className={`page-container ${styles.container}`}>
       <header className={styles.header}>
-        <div className={styles.headerIconWrapper} onClick={() => navigate('/ledgers')}>
+        <div
+          className={styles.headerIconWrapper}
+          onClick={() => navigate('/ledgers')}
+        >
           <span className={styles.headerIcon}>📂</span>
         </div>
         <h1 className={styles.headerTitle}>
-          {store.currentLedgerId === 'global' ? '🌍 全局资产视角' : (store.ledgers.find(l => l.id === store.currentLedgerId)?.name || '您的财务报告')}
+          {store.currentLedgerId === 'global'
+            ? '🌍 全局资产视角'
+            : store.ledgers.find((l) => l.id === store.currentLedgerId)?.name ||
+              '您的财务报告'}
         </h1>
-        <div className={styles.headerIconWrapper} onClick={() => navigate('/profile')}>
-          <span className={styles.headerIcon}>👤</span>
+        <div className={styles.headerRightIcons}>
+          <NotificationHub />
+          <div
+            className={styles.headerIconWrapper}
+            onClick={() => navigate('/profile')}
+          >
+            <span className={styles.headerIcon}>👤</span>
+          </div>
         </div>
       </header>
 
       <section className={styles.sectionHeader}>
         <h2 className={styles.sectionTitle}>财务健康结果</h2>
-        <div 
-          className={styles.healthShield} 
+        <div
+          className={styles.healthShield}
           onClick={() => setHealthVisible(true)}
           title="系统健康治理"
         >
           {store.healthReport?.isHealthy ? '🛡️' : '🚨'}
         </div>
-        <div className={styles.wishlistLink} onClick={() => navigate('/wishlist')}>
+        <div
+          className={styles.wishlistLink}
+          onClick={() => navigate('/wishlist')}
+        >
           愿望清单 →
         </div>
         <p className={styles.sectionSubtitle}>
@@ -107,13 +124,26 @@ const Dashboard = () => {
         <div className={styles.metricCard}>
           <div className={styles.metricLabel}>冷冻资金 (冷静期)</div>
           <div className={styles.metricValue} style={{ color: '#F6AD55' }}>
-            ¥{store.wishlistItems.filter(i => i.status === 'cooling').reduce((sum, it) => sum + it.amount, 0).toLocaleString()}
+            ¥
+            {store.wishlistItems
+              .filter((i) => i.status === 'cooling')
+              .reduce((sum, it) => sum + it.amount, 0)
+              .toLocaleString()}
           </div>
         </div>
         <div className={styles.metricCard}>
           <div className={styles.metricLabel}>可用可支配</div>
-          <div className={styles.metricValue} style={{ color: 'var(--color-accent)' }}>
-            ¥{(store.disposableIncome - store.wishlistItems.filter(i => i.status === 'cooling').reduce((sum, it) => sum + it.amount, 0)).toLocaleString()}
+          <div
+            className={styles.metricValue}
+            style={{ color: 'var(--color-accent)' }}
+          >
+            ¥
+            {(
+              store.disposableIncome -
+              store.wishlistItems
+                .filter((i) => i.status === 'cooling')
+                .reduce((sum, it) => sum + it.amount, 0)
+            ).toLocaleString()}
           </div>
         </div>
         <div className={styles.metricCard}>
@@ -126,7 +156,10 @@ const Dashboard = () => {
         <div className={styles.metricCard}>
           <div className={styles.metricLabel}>应急金覆盖</div>
           <div className={styles.metricValue}>
-            {Math.floor((store.profile.emergencyFundAmount || 0) / (store.healthStats?.meanDailySpend || 1))}
+            {Math.floor(
+              (store.profile.emergencyFundAmount || 0) /
+                (store.healthStats?.meanDailySpend || 1),
+            )}
             <span style={{ fontSize: '16px', marginLeft: 2 }}>天</span>
           </div>
         </div>
@@ -147,7 +180,9 @@ const Dashboard = () => {
             </div>
           ))}
           {store.accounts.length === 0 && (
-            <p className={styles.sectionSubtitle}>暂无账户，记账时将自动创建默认账户</p>
+            <p className={styles.sectionSubtitle}>
+              暂无账户，记账时将自动创建默认账户
+            </p>
           )}
         </div>
       </section>
@@ -159,15 +194,47 @@ const Dashboard = () => {
         </div>
 
         <div className={styles.statsBody}>
+          {store.predictions.some((p) => p.risk === 'high') && (
+            <div className={styles.predictionWarning}>
+              🚨 警告：检测到多个项目预计在本月内超支。
+            </div>
+          )}
           <div className={styles.progressBars}>
             {chartData.map((d) => (
               <div className={styles.progressItem} key={d.name}>
-                <div className={styles.progressLabel}>{d.name}</div>
+                <div className={styles.progressLabel}>
+                  {d.name}
+                  {store.predictions.find(
+                    (p) =>
+                      p.budgetId ===
+                      store.budgets.find((b) => b.name === d.name)?.id,
+                  )?.risk === 'high' && (
+                    <span
+                      style={{
+                        color: '#E53E3E',
+                        fontSize: '10px',
+                        marginLeft: 4,
+                      }}
+                    >
+                      [预计超支]
+                    </span>
+                  )}
+                </div>
                 <div className={styles.progressPercent}>{d.percent}%</div>
                 <div className={styles.progressBarTrack}>
                   <div
                     className={styles.progressBarFill}
-                    style={{ width: `${d.percent}%`, backgroundColor: d.color }}
+                    style={{
+                      width: `${d.percent}%`,
+                      backgroundColor:
+                        store.predictions.find(
+                          (p) =>
+                            p.budgetId ===
+                            store.budgets.find((b) => b.name === d.name)?.id,
+                        )?.risk === 'high'
+                          ? '#E53E3E'
+                          : d.color,
+                    }}
                   ></div>
                 </div>
               </div>
@@ -195,34 +262,48 @@ const Dashboard = () => {
       <section className={styles.vaultSection}>
         <div className={styles.vaultHeader}>
           <div>
-             <h2 className={styles.sectionTitle}>个人保险库 (Vault)</h2>
-             <p className={styles.sectionSubtitle}>应急金保障进度</p>
+            <h2 className={styles.sectionTitle}>个人保险库 (Vault)</h2>
+            <p className={styles.sectionSubtitle}>应急金保障进度</p>
           </div>
           <span className={styles.vaultIcon}>🛡️</span>
         </div>
         <div className={styles.vaultBody}>
           <div className={styles.vaultMain}>
-            <div className={styles.vaultValue}>¥{(store.profile.emergencyFundAmount || 0).toLocaleString()}</div>
+            <div className={styles.vaultValue}>
+              ¥{(store.profile.emergencyFundAmount || 0).toLocaleString()}
+            </div>
             <div className={styles.vaultLabel}>当前应急准备金</div>
           </div>
           <div className={styles.vaultProgress}>
             <div className={styles.vaultProgressText}>
               <span>目标进度</span>
-              <span>{Math.round(((store.profile.emergencyFundAmount || 0) / (store.profile.emergencyFundGoal || 1)) * 100)}%</span>
+              <span>
+                {Math.round(
+                  ((store.profile.emergencyFundAmount || 0) /
+                    (store.profile.emergencyFundGoal || 1)) *
+                    100,
+                )}
+                %
+              </span>
             </div>
             <div className={styles.progressBarTrack}>
-              <div 
-                className={styles.progressBarFill} 
-                style={{ 
+              <div
+                className={styles.progressBarFill}
+                style={{
                   width: `${Math.min(100, ((store.profile.emergencyFundAmount || 0) / (store.profile.emergencyFundGoal || 1)) * 100)}%`,
-                  backgroundColor: '#4FD1C5' 
+                  backgroundColor: '#4FD1C5',
                 }}
               />
             </div>
-            <div className={styles.vaultGoal}>目标：¥{(store.profile.emergencyFundGoal || 0).toLocaleString()}</div>
+            <div className={styles.vaultGoal}>
+              目标：¥{(store.profile.emergencyFundGoal || 0).toLocaleString()}
+            </div>
           </div>
           <div className={styles.savingsInfo}>
-             <span>通用储蓄余额：¥{(store.profile.savingsAmount || 0).toLocaleString()}</span>
+            <span>
+              通用储蓄余额：¥
+              {(store.profile.savingsAmount || 0).toLocaleString()}
+            </span>
           </div>
         </div>
       </section>
@@ -238,8 +319,13 @@ const Dashboard = () => {
                 <div key={tx.id} className={styles.txItem}>
                   <div className={styles.txIcon}>{cat?.icon || '📝'}</div>
                   <div className={styles.txInfo}>
-                    <div className={styles.txName}>{cat?.name || '未知分类'}{tx.memo ? ` · ${tx.memo}` : ''}</div>
-                    <div className={styles.txDate}>{new Date(tx.date).toLocaleDateString('zh-CN')}</div>
+                    <div className={styles.txName}>
+                      {cat?.name || '未知分类'}
+                      {tx.memo ? ` · ${tx.memo}` : ''}
+                    </div>
+                    <div className={styles.txDate}>
+                      {new Date(tx.date).toLocaleDateString('zh-CN')}
+                    </div>
                   </div>
                   <div className={styles.txAmount}>
                     {tx.type === 'income' ? '+' : '-'}¥{tx.amount.toFixed(2)}
@@ -296,9 +382,13 @@ const Dashboard = () => {
                 <div key={idx} className={styles.checkItem}>
                   <div className={styles.checkInfo}>
                     <div className={styles.checkName}>{check.name}</div>
-                    <div style={{ fontSize: '11px', color: '#888' }}>{check.details}</div>
+                    <div style={{ fontSize: '11px', color: '#888' }}>
+                      {check.details}
+                    </div>
                   </div>
-                  <span className={`${styles.checkStatus} ${styles[check.status]}`}>
+                  <span
+                    className={`${styles.checkStatus} ${styles[check.status]}`}
+                  >
                     {check.status === 'pass' ? '正常' : '异常'}
                   </span>
                 </div>
@@ -307,13 +397,15 @@ const Dashboard = () => {
 
             {!store.healthReport?.isHealthy && (
               <div className={styles.mismatchBanner}>
-                检测到账面异常差额：¥{store.healthReport?.mismatchAmount.toFixed(2)}。建议执行对账校准。
+                检测到账面异常差额：¥
+                {store.healthReport?.mismatchAmount.toFixed(2)}
+                。建议执行对账校准。
               </div>
             )}
 
             <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
-              <Button 
-                block 
+              <Button
+                block
                 size="small"
                 onClick={() => {
                   store.backupDatabase();
@@ -322,10 +414,21 @@ const Dashboard = () => {
               >
                 💾 备份数据库
               </Button>
+              <Button
+                block
+                size="small"
+                onClick={() => {
+                  store.exportData();
+                  setHealthVisible(false);
+                }}
+              >
+                📥 导出数据
+              </Button>
+
               {!store.healthReport?.isHealthy && (
-                <Button 
-                  block 
-                  size="small" 
+                <Button
+                  block
+                  size="small"
                   color="primary"
                   onClick={() => {
                     store.reconcileHealth();
@@ -341,10 +444,8 @@ const Dashboard = () => {
         closeOnMaskClick
         onClose={() => setHealthVisible(false)}
       />
-
     </div>
   );
 };
 
 export default Dashboard;
-

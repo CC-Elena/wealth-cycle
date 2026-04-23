@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
+import { useEffect, useState } from 'react';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
 
@@ -24,13 +24,13 @@ const Analysis = () => {
   }, []);
 
   // 处理趋势数据以供 ECharts 使用
-  const months = Array.from(new Set(trendData.map(d => d.month))).sort();
-  const incomeData = months.map(m => {
-    const item = trendData.find(d => d.month === m && d.type === 'income');
+  const months = Array.from(new Set(trendData.map((d) => d.month))).sort();
+  const incomeData = months.map((m) => {
+    const item = trendData.find((d) => d.month === m && d.type === 'income');
     return item ? item.total : 0;
   });
-  const expenseData = months.map(m => {
-    const item = trendData.find(d => d.month === m && d.type === 'expense');
+  const expenseData = months.map((m) => {
+    const item = trendData.find((d) => d.month === m && d.type === 'expense');
     return item ? item.total : 0;
   });
 
@@ -55,10 +55,16 @@ const Analysis = () => {
         areaStyle: {
           color: {
             type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [{ offset: 0, color: 'rgba(79, 209, 197, 0.3)' }, { offset: 1, color: 'rgba(79, 209, 197, 0)' }]
-          }
-        }
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(79, 209, 197, 0.3)' },
+              { offset: 1, color: 'rgba(79, 209, 197, 0)' },
+            ],
+          },
+        },
       },
       {
         name: '支出',
@@ -69,12 +75,18 @@ const Analysis = () => {
         areaStyle: {
           color: {
             type: 'linear',
-            x: 0, y: 0, x2: 0, y2: 1,
-            colorStops: [{ offset: 0, color: 'rgba(245, 101, 101, 0.3)' }, { offset: 1, color: 'rgba(245, 101, 101, 0)' }]
-          }
-        }
-      }
-    ]
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(245, 101, 101, 0.3)' },
+              { offset: 1, color: 'rgba(245, 101, 101, 0)' },
+            ],
+          },
+        },
+      },
+    ],
   };
 
   const pieOption = {
@@ -89,24 +101,28 @@ const Analysis = () => {
         label: { show: false, position: 'center' },
         emphasis: { label: { show: true, fontSize: '18', fontWeight: 'bold' } },
         labelLine: { show: false },
-        data: categoryDist.map(d => ({
+        data: categoryDist.map((d) => ({
           value: d.total,
           name: d.categoryName,
-          itemStyle: { color: d.categoryColor }
-        }))
-      }
-    ]
+          itemStyle: { color: d.categoryColor },
+        })),
+      },
+    ],
   };
 
   return (
     <div className={`page-container ${styles.container}`}>
       <header className={styles.header}>
         <h1 className={styles.title}>
-          财务趋势分析 
-          {store.currentLedgerId === 'global' && <span className={styles.globalBadge}>Global</span>}
+          财务趋势分析
+          {store.currentLedgerId === 'global' && (
+            <span className={styles.globalBadge}>Global</span>
+          )}
         </h1>
         <p className={styles.subtitle}>
-          {store.currentLedgerId === 'global' ? '当前显示所有账本聚合数据' : '基于历史数据的深度洞察'}
+          {store.currentLedgerId === 'global'
+            ? '当前显示所有账本聚合数据'
+            : '基于历史数据的深度洞察'}
         </p>
       </header>
 
@@ -126,7 +142,7 @@ const Analysis = () => {
             <h3>消费构成</h3>
           </div>
           <div className={styles.chartWrapper}>
-             <ReactECharts option={pieOption} style={{ height: '250px' }} />
+            <ReactECharts option={pieOption} style={{ height: '250px' }} />
           </div>
         </section>
 
@@ -138,30 +154,43 @@ const Analysis = () => {
             {categoryDist.slice(0, 3).map((d, i) => (
               <div key={d.categoryId} className={styles.rankItem}>
                 <div className={styles.rankInfo}>
-                   <span className={styles.rankNumber}>{i + 1}</span>
-                   <span className={styles.rankIcon}>{d.categoryIcon || '🏷️'}</span>
-                   <span className={styles.rankName}>{d.categoryName}</span>
+                  <span className={styles.rankNumber}>{i + 1}</span>
+                  <span className={styles.rankIcon}>
+                    {d.categoryIcon || '🏷️'}
+                  </span>
+                  <span className={styles.rankName}>{d.categoryName}</span>
                 </div>
-                <div className={styles.rankValue}>¥{d.total.toLocaleString()}</div>
+                <div className={styles.rankValue}>
+                  ¥{d.total.toLocaleString()}
+                </div>
               </div>
             ))}
-            {categoryDist.length === 0 && <div className={styles.empty}>暂无数据</div>}
+            {categoryDist.length === 0 && (
+              <div className={styles.empty}>暂无数据</div>
+            )}
           </div>
         </section>
       </div>
 
       <section className={styles.insightCard}>
-         <div className={styles.insightTitle}>
-            <span>💡 智能分析建议</span>
-         </div>
-         <div className={styles.insightContent}>
-            {expenseData[expenseData.length - 1] > (expenseData[expenseData.length - 2] || 0) ? (
-              <p>您的本月支出较上月有所上升，建议检查是否有非必要的冲动消费项。</p>
-            ) : (
-              <p>您的财务控制状况良好，本月支出保持在健康水平，可以考虑增加应急金划转。</p>
-            )}
-            <p className={styles.insightHint}>向 TwinLedger 提问以获取更深度的复盘建议。</p>
-         </div>
+        <div className={styles.insightTitle}>
+          <span>💡 智能分析建议</span>
+        </div>
+        <div className={styles.insightContent}>
+          {expenseData[expenseData.length - 1] >
+          (expenseData[expenseData.length - 2] || 0) ? (
+            <p>
+              您的本月支出较上月有所上升，建议检查是否有非必要的冲动消费项。
+            </p>
+          ) : (
+            <p>
+              您的财务控制状况良好，本月支出保持在健康水平，可以考虑增加应急金划转。
+            </p>
+          )}
+          <p className={styles.insightHint}>
+            向 TwinLedger 提问以获取更深度的复盘建议。
+          </p>
+        </div>
       </section>
     </div>
   );

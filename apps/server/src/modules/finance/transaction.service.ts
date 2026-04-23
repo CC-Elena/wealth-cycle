@@ -1,14 +1,14 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { eq, desc, and, gte, sql } from 'drizzle-orm';
+import { Inject, Injectable } from '@nestjs/common';
+import type { CreateTransaction } from '@stock/shared';
+import { and, desc, eq, gte, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { CreateTransaction } from '@stock/shared';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 
-import { InventoryService } from './inventory.service';
-import { AccountService } from './account.service';
+import type { AccountService } from './account.service';
+import type { InventoryService } from './inventory.service';
 
 @Injectable()
 export class TransactionService {
@@ -16,7 +16,10 @@ export class TransactionService {
     @Inject(DB_CONNECTION) private readonly db: BetterSQLite3Database<typeof schema>,
     private readonly inventoryService: InventoryService,
     private readonly accountService: AccountService,
+    private readonly budgetService: BudgetService,
+    private readonly notificationService: NotificationService,
   ) {}
+
 
   getTransactions(ledgerId?: string, limit = 50) {
     const filters = [eq(schema.transactions.userId, DEFAULT_USER_ID)];
@@ -106,9 +109,37 @@ export class TransactionService {
         console.error(`Failed to auto-inventory for transaction ${id}:`, err);
       });
 
+      // 异步检测预算超支告警
+      if (data.type === 'expense') {
+        this.checkAndTriggerBudgetAlert(data.categoryId, ledgerId, data.amount).catch(err => {
+          console.error(`Failed to check budget alert for transaction ${id}:`, err);
+        });
+      }
+
       return result;
     });
   }
+
+  private async checkAndTriggerBudgetAlert(categoryId: string, ledgerId: string, amount: number) {
+    const status = await this.budgetService.checkBudgetStatus(categoryId, ledgerId);
+    if (!status) return;
+
+    if (status.isOverdraft || status.usagePercent >= 90) {
+      const message = status.isOverdraft 
+        ? `预算“${status.plan.name}”已超支！当前支出：¥${status.plan.spentAmount}，预算额度：¥${status.plan.totalAmount}`
+        : `预算“${status.plan.name}”进度已达 ${status.usagePercent.toFixed(1)}%，请注意控制支出。`;
+
+      await this.notificationService.create({
+        userId: DEFAULT_USER_ID,
+        ledgerId,
+        type: 'budget_overdraft',
+        title: status.isOverdraft ? '预算超支告警' : '预算进度提醒',
+        message,
+        data: { budgetId: status.plan.id, categoryId }
+      });
+    }
+  }
+
   getDailySpendingStats(ledgerId?: string) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

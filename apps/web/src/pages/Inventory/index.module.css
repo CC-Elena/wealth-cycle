@@ -26,7 +26,7 @@
 /* 视图切换器 Dual View Toggle */
 .viewToggle {
   display: flex;
-  background-color: #F0F0F5;
+  background-color: #f0f0f5;
   border-radius: var(--radius-lg);
   padding: 4px;
   position: relative;
@@ -58,7 +58,7 @@
   background-color: white;
   border-radius: var(--radius-md);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1;
 }
 
@@ -76,7 +76,7 @@
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-sm) 0;
-  border-bottom: 2px solid #F5F4FE;
+  border-bottom: 2px solid #f5f4fe;
   margin-bottom: var(--spacing-sm);
 }
 
@@ -94,7 +94,7 @@
 .stationCount {
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
-  background: #F0F0F5;
+  background: #f0f0f5;
   padding: 2px 8px;
   border-radius: 12px;
 }
@@ -106,7 +106,7 @@
   padding: var(--spacing-md);
   margin-bottom: var(--spacing-md);
   border: 1px solid var(--color-border);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
@@ -162,7 +162,7 @@
   border: 1px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
 
 .lotTop {
@@ -187,7 +187,7 @@
   font-size: 10px;
   padding: 2px 6px;
   border-radius: 4px;
-  background: #F0F0F5;
+  background: #f0f0f5;
   color: var(--color-text-secondary);
 }
 
@@ -227,7 +227,7 @@
 /* U Bar for Lots */
 .uBarContainer {
   height: 6px;
-  background-color: #F0F0F5;
+  background-color: #f0f0f5;
   border-radius: 3px;
   margin-top: 8px;
   overflow: hidden;

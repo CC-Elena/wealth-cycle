@@ -1,13 +1,15 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { eq, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { existsSync, mkdirSync } from 'fs';
+import { join } from 'path';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { eq, sql } from 'drizzle-orm';
-import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-import { WishlistService } from './wishlist.service';
-import { UserService } from '../user/user.service';
-import { AccountService } from './account.service';
+import type { NotificationService } from '../notification/notification.service';
+import type { UserService } from '../user/user.service';
+import type { AccountService } from './account.service';
+import type { WishlistService } from './wishlist.service';
+
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 
@@ -20,6 +22,7 @@ export class GovernanceService {
     private readonly wishlistService: WishlistService,
     private readonly userService: UserService,
     private readonly accountService: AccountService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   /**
@@ -115,5 +118,55 @@ export class GovernanceService {
 
     this.logger.log(`Balance reconciled. New disposable income: ${newDisposable}`);
     return { success: true, newDisposable };
+  }
+
+  /**
+   * 检查发薪提醒
+   */
+  async checkPaydayReminders(userId: string) {
+    const allLedgers = await this.db.select().from(schema.ledgers).where(eq(schema.ledgers.userId, userId)).all();
+    const today = new Date();
+    const currentDay = today.getDate();
+
+    for (const ledger of allLedgers) {
+      if (!ledger.payday) continue;
+
+      // 提醒策略：发薪日前一天及当天提醒
+      const isPayday = ledger.payday === currentDay;
+      const isDayBefore = ledger.payday === currentDay + 1;
+
+      if (isPayday || isDayBefore) {
+        await this.notificationService.create({
+          userId: ledger.userId,
+          ledgerId: ledger.id,
+          type: 'payroll_reminder',
+          title: isPayday ? '今日发薪提醒' : '明日发薪预警',
+          message: isPayday 
+            ? `今天是账本“${ledger.name}”的设定的发薪日，请记得处理薪资录入。`
+            : `明天是账本“${ledger.name}”的发薪日，请提前规划。`,
+          data: { payday: ledger.payday }
+        });
+      }
+    }
+  }
+
+  /**
+   * 导出全量财务数据
+   */
+  async exportAllData(userId: string) {
+    const data = {
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      user: await this.db.select().from(schema.users).where(eq(schema.users.id, userId)).get(),
+      ledgers: await this.db.select().from(schema.ledgers).where(eq(schema.ledgers.userId, userId)).all(),
+      categories: await this.db.select().from(schema.categories).where(eq(schema.categories.userId, userId)).all(),
+      transactions: await this.db.select().from(schema.transactions).where(eq(schema.transactions.userId, userId)).all(),
+      budgetPlans: await this.db.select().from(schema.budgetPlans).where(eq(schema.budgetPlans.userId, userId)).all(),
+      inventoryItems: await this.db.select().from(schema.inventoryItems).where(eq(schema.inventoryItems.userId, userId)).all(),
+      wishlistItems: await this.db.select().from(schema.wishlistItems).where(eq(schema.wishlistItems.userId, userId)).all(),
+      fixedBills: await this.db.select().from(schema.fixedBills).where(eq(schema.fixedBills.userId, userId)).all(),
+    };
+
+    return data;
   }
 }

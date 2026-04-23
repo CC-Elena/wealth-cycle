@@ -1,9 +1,9 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { eq, inArray, and, gte, lte, sql } from 'drizzle-orm';
+import { Inject, Injectable } from '@nestjs/common';
+import type { CreateBudgetPlan, UpdateBudgetPlan } from '@stock/shared';
+import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { CreateBudgetPlan, UpdateBudgetPlan } from '@stock/shared';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 
@@ -111,6 +111,26 @@ export class BudgetService {
     const plans = await this.getBudgetPlans();
     return plans.find(p => p.id === id);
   }
+
+  async checkBudgetStatus(categoryId: string, ledgerId: string) {
+    // Find budget plan associated with this category
+    const budgetCategory = this.db.select()
+      .from(schema.budgetCategories)
+      .where(eq(schema.budgetCategories.categoryId, categoryId))
+      .get();
+
+    if (!budgetCategory) return null;
+
+    const plan = await this.getBudgetPlanById(budgetCategory.budgetId);
+    if (!plan) return null;
+
+    return {
+      plan,
+      isOverdraft: plan.spentAmount > plan.totalAmount,
+      usagePercent: plan.totalAmount > 0 ? (plan.spentAmount / plan.totalAmount) * 100 : 0,
+    };
+  }
+
 
   async updateBudgetPlan(id: string, data: UpdateBudgetPlan) {
     const now = new Date();

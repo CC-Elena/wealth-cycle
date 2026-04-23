@@ -1,26 +1,37 @@
-import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { and, eq } from 'drizzle-orm';
 import { DB_CONNECTION } from '../../database/database.module';
-import { agentProposals, transactions, transactionItems } from '../../database/schema';
-import { eq, and } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
-import { TransactionService } from '../finance/transaction.service';
-import { BudgetService } from '../finance/budget.service';
-import { InventoryService } from './inventory.service';
-import { AccountService } from './account.service';
-import { SavingsService } from './savings.service';
-import { WishlistService } from '../finance/wishlist.service';
+import { agentProposals, transactionItems, transactions } from '../../database/schema';
+import type { AccountService } from '../finance/account.service';
+import type { BudgetService } from '../finance/budget.service';
+import type { GovernanceService } from '../finance/governance.service';
+import type { InventoryService } from '../finance/inventory.service';
+import type { LedgerService } from '../finance/ledger.service';
+import type { PredictionService } from '../finance/prediction.service';
+import type { SavingsService } from '../finance/savings.service';
+import type { TransactionService } from '../finance/transaction.service';
+import type { WishlistService } from '../finance/wishlist.service';
+import type { UserService } from '../user/user.service';
 
 @Injectable()
 export class AgentProposalService {
   constructor(
     @Inject(DB_CONNECTION) private readonly db: any,
+    private readonly transactionService: TransactionService,
+    private readonly budgetService: BudgetService,
+    private readonly inventoryService: InventoryService,
+    private readonly accountService: AccountService,
     private readonly savingsService: SavingsService,
     private readonly wishlistService: WishlistService,
+    private readonly ledgerService: LedgerService,
+    private readonly userService: UserService,
     private readonly governanceService: GovernanceService,
+    private readonly predictionService: PredictionService,
   ) {}
 
   async createProposal(userId: string, toolName: string, args: any, summary?: string) {
-    const id = uuidv4();
+    const id = randomUUID();
     const now = new Date();
     
     await this.db.insert(agentProposals).values({
@@ -81,7 +92,7 @@ export class AgentProposalService {
         });
       } else if (proposal.toolName === 'reallocate_budget') {
         const args = proposal.arguments as any;
-        await this.budgetService.reallocateBudget(args.fromBudgetId, args.toBudgetId, args.amount);
+        await this.predictionService.transferFunds(userId, args.ledgerId, args.fromBudgetId, args.toBudgetId, args.amount, args.reason);
       } else if (proposal.toolName === 'consume_item') {
         const args = proposal.arguments as any;
         await this.inventoryService.consume(args.itemId, args.quantity);
@@ -113,6 +124,9 @@ export class AgentProposalService {
       } else if (proposal.toolName === 'reconcile_finance_data') {
         const args = proposal.arguments as any;
         await this.governanceService.reconcileBalances(args.ledgerId);
+      } else if (proposal.toolName === 'transfer_between_ledgers') {
+        const args = proposal.arguments as any;
+        await this.ledgerService.transferFundsBetweenLedgers(args.fromLedgerId, args.toLedgerId, args.amount);
       } else {
         throw new BadRequestException(`不支持执行工具: ${proposal.toolName}`);
       }

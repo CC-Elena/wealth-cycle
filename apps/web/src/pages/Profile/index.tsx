@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import { UserSchema } from '@stock/shared';
 import { Switch, Toast } from 'antd-mobile';
+import ky from 'ky';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
-import ky from 'ky';
-import { UserSchema } from '@stock/shared';
 
 const Profile = () => {
   const store = useFinanceStore();
@@ -15,7 +15,10 @@ const Profile = () => {
     try {
       const result = await ky.get('http://localhost:3000/users/test').json();
       const validUser = UserSchema.parse(result);
-      Toast.show({ icon: 'success', content: 'API通信且Zod校验成功: ' + validUser.name });
+      Toast.show({
+        icon: 'success',
+        content: 'API通信且Zod校验成功: ' + validUser.name,
+      });
       setApiResult(JSON.stringify(validUser, null, 2));
     } catch (error: any) {
       Toast.show({ icon: 'fail', content: 'API测试失败' });
@@ -28,7 +31,9 @@ const Profile = () => {
       <div className={styles.headerRow}>
         <div className={styles.iconBtn}>‹</div>
         <div className={styles.title}>我的</div>
-        <div className={styles.iconBtn} onClick={handleTestApi}>⚙️API</div>
+        <div className={styles.iconBtn} onClick={handleTestApi}>
+          ⚙️API
+        </div>
       </div>
 
       <div className={styles.passportCard}>
@@ -41,15 +46,23 @@ const Profile = () => {
         </div>
         <div className={styles.passportNetWorth}>净资产 (Net Worth)</div>
         <div className={styles.passportAmount}>
-          ¥{store.ledgers.find(l => l.id === store.currentLedgerId)?.netWorth?.toLocaleString() || '0'}
+          ¥
+          {store.ledgers
+            .find((l) => l.id === store.currentLedgerId)
+            ?.netWorth?.toLocaleString() || '0'}
         </div>
       </div>
 
-      <div className={styles.ledgerShortcut} onClick={() => navigate('/ledgers')}>
+      <div
+        className={styles.ledgerShortcut}
+        onClick={() => navigate('/ledgers')}
+      >
         <div className={styles.ledgerInfo}>
           <div className={styles.ledgerLabel}>当前账本</div>
           <div className={styles.ledgerName}>
-            {store.ledgers.find(l => l.id === store.currentLedgerId)?.icon} {store.ledgers.find(l => l.id === store.currentLedgerId)?.name || '未选择'}
+            {store.ledgers.find((l) => l.id === store.currentLedgerId)?.icon}{' '}
+            {store.ledgers.find((l) => l.id === store.currentLedgerId)?.name ||
+              '未选择'}
           </div>
         </div>
         <div className={styles.switchTxt}>切换 ❯</div>
@@ -61,6 +74,14 @@ const Profile = () => {
           <div className={styles.listItem}>
             <div className={styles.itemIcon}>👤</div>
             <div className={styles.itemText}>个人资料</div>
+            <div className={styles.itemRight}>❯</div>
+          </div>
+          <div
+            className={styles.listItem}
+            onClick={() => navigate('/accounts')}
+          >
+            <div className={styles.itemIcon}>🏦</div>
+            <div className={styles.itemText}>物理账户管理</div>
             <div className={styles.itemRight}>❯</div>
           </div>
           <div className={styles.listItem} onClick={() => navigate('/bills')}>

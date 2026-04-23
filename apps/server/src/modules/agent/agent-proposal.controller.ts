@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Delete, Param, UseGuards, Request, Headers } from '@nestjs/common';
-import { AgentProposalService } from './agent-proposal.service';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Controller, Delete, Get, Headers, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { AgentProposalService } from './agent-proposal.service';
 
 @ApiTags('Agent Proposals')
 @Controller('agent/proposals')

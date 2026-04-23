@@ -1,7 +1,7 @@
-import { useFinanceStore, WishlistItem } from '../../stores/financeStore';
-import styles from './index.module.css';
-import { Button, Toast, ProgressBar } from 'antd-mobile';
+import { Button, ProgressBar, Toast } from 'antd-mobile';
 import { useNavigate } from 'react-router-dom';
+import { useFinanceStore, type WishlistItem } from '../../stores/financeStore';
+import styles from './index.module.css';
 
 const Wishlist = () => {
   const { wishlistItems, updateWishlistStatus, categories } = useFinanceStore();
@@ -28,7 +28,11 @@ const Wishlist = () => {
   return (
     <div className={`page-container ${styles.container}`}>
       <header className={styles.header}>
-        <Button onClick={() => navigate(-1)} fill="none" className={styles.backBtn}>
+        <Button
+          onClick={() => navigate(-1)}
+          fill="none"
+          className={styles.backBtn}
+        >
           ← 返回
         </Button>
         <h1 className={styles.title}>愿望清单</h1>
@@ -36,12 +40,23 @@ const Wishlist = () => {
       </header>
 
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>冷静期执行中 ({coolingItems.length})</h2>
+        <h2 className={styles.sectionTitle}>
+          冷静期执行中 ({coolingItems.length})
+        </h2>
         <div className={styles.itemsList}>
           {coolingItems.map((item) => {
             const cat = categories.find((c) => c.id === item.categoryId);
             const daysLeft = getDaysRemaining(item.coolingEnd);
-            const progress = Math.min(100, Math.max(0, ( (Date.now() - new Date(item.createdAt).getTime()) / (new Date(item.coolingEnd).getTime() - new Date(item.createdAt).getTime()) ) * 100));
+            const progress = Math.min(
+              100,
+              Math.max(
+                0,
+                ((Date.now() - new Date(item.createdAt).getTime()) /
+                  (new Date(item.coolingEnd).getTime() -
+                    new Date(item.createdAt).getTime())) *
+                  100,
+              ),
+            );
 
             return (
               <div key={item.id} className={styles.itemCard}>
@@ -49,7 +64,9 @@ const Wishlist = () => {
                   <span className={styles.itemIcon}>{cat?.icon || '🎁'}</span>
                   <div className={styles.itemMeta}>
                     <div className={styles.itemName}>{item.name}</div>
-                    <div className={styles.itemAmount}>¥{item.amount.toLocaleString()}</div>
+                    <div className={styles.itemAmount}>
+                      ¥{item.amount.toLocaleString()}
+                    </div>
                   </div>
                   <div className={styles.countdown}>
                     {daysLeft > 0 ? `${daysLeft}天后可谈` : '🎉 已冷静'}
@@ -62,21 +79,24 @@ const Wishlist = () => {
                 </div>
 
                 <div className={styles.progressSection}>
-                  <ProgressBar percent={progress} style={{ '--track-width': '6px' }} />
+                  <ProgressBar
+                    percent={progress}
+                    style={{ '--track-width': '6px' }}
+                  />
                 </div>
 
                 <div className={styles.actions}>
-                  <Button 
-                    size="small" 
-                    color="danger" 
+                  <Button
+                    size="small"
+                    color="danger"
                     fill="outline"
                     onClick={() => handleAction(item.id, 'rejected')}
                   >
                     放弃购买
                   </Button>
-                  <Button 
-                    size="small" 
-                    color="primary" 
+                  <Button
+                    size="small"
+                    color="primary"
                     disabled={daysLeft > 0}
                     onClick={() => handleAction(item.id, 'bought')}
                   >

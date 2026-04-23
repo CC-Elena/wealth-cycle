@@ -1,48 +1,48 @@
-## Context
+## 场景背景 (Context)
 
-Inventory intake currently depends on manual text input for item content and quantity. The project already has inventory entry pages and store-based state management, but does not provide camera-first assisted entry. This change introduces a recognition-assisted path using captured item photos, while preserving manual confirmation before persistence.
+目前的入库流程依赖于手动文本输入物品内容和数量。项目已经有了库存入库页面和基于 Store 的状态管理，但尚未提供摄像头优先的辅助入库功能。本次变更引入了利用捕获的物品照片进行识别辅助的路径，同时保留持久化前的手动确认。
 
-Constraints:
-- Mobile and desktop browsers have different camera capabilities and permission prompts.
-- Recognition output may be uncertain and must not bypass user confirmation.
-- Existing stock-in flow must remain usable when camera or recognition is unavailable.
+约束条件：
+- 移动端和桌面端浏览器具有不同的摄像头能力和权限提示。
+- 识别输出可能存在不确定性，绝不能跳过用户确认。
+- 当摄像头或识别不可用时，现有的入库流程必须保持可用。
 
-## Goals / Non-Goals
+## 目标与非目标 (Goals / Non-Goals)
 
-**Goals:**
-- Enable camera capture during stock-in entry.
-- Provide recognition-derived suggestions for item content and quantity.
-- Require user confirmation/edit before final save.
-- Keep fallback to full manual entry for reliability.
-- Capture recognition confidence and source image reference for traceability.
+**目标：**
+- 在入库项录入期间启用摄像头捕捉。
+- 为物品内容和数量提供识别出的建议。
+- 在最终保存前要求用户确认/编辑。
+- 保留完整的手动输入回退方案以保证可靠性。
+- 捕获识别置信度和原始图像引用以便溯源。
 
-**Non-Goals:**
-- Fully autonomous stock-in without user review.
-- Building custom CV models in this change.
-- Bulk multi-item detection from one photo in v1.
+**非目标：**
+- 无需用户审核的全自动入库。
+- 在本次变更中构建自定义计算机视觉 (CV) 模型。
+- v1 版本中实现从单张照片识别多个散装物品。
 
-## Decisions
+## 设计决策 (Decisions)
 
-1. Camera-assisted flow is integrated as an optional branch in existing stock-in UI.
-   - Rationale: Reuses current inventory workflow and reduces disruption.
-   - Alternative: Separate dedicated page; rejected to avoid duplicated form logic.
+1. 摄像头辅助流程作为现有入库 UI 的可选分支集成。
+   - 理由：重用当前库存工作流，减少干扰。
+   - 备选方案：独立的专用页面；因避免重复的表单逻辑而被否决。
 
-2. Recognition is asynchronous and returns a normalized payload:
-   `{ itemNameCandidates, quantityGuess, confidence, rawLabels }`.
-   - Rationale: Keeps UI decoupled from provider-specific response formats.
-   - Alternative: Directly binding provider JSON to UI; rejected due to vendor lock-in.
+2. 识别是异步的，并返回标准化的有效负载：
+   `{ itemNameCandidates, quantityGuess, confidence, rawLabels }`。
+   - 理由：保持 UI 与特定供应商的响应格式解耦。
+   - 备选方案：将供应商 JSON 直接绑定到 UI；因供应商锁定风险而被否决。
 
-3. Save operation always uses user-confirmed values, not raw recognition output.
-   - Rationale: Prevents incorrect inventory records from low-confidence inference.
-   - Alternative: Auto-save over confidence threshold; rejected for initial release risk.
+3. 保存操作始终使用用户确认的值，而非原始识别输出。
+   - 理由：防止低置信度推断产生错误的库存记录。
+   - 备选方案：超过置信度阈值时自动保存；因初始发布风险而被否决。
 
-4. Failure policy: camera denied / recognition failed falls back to manual form with visible reason.
-   - Rationale: Guarantees task completion and better operator trust.
-   - Alternative: Hard-block submission until camera succeeds; rejected for operational fragility.
+4. 失败策略：摄像头被拒绝/识别失败时，回退到手动表单并显示原因。
+   - 理由：保证任务完成和更好的操作员信任。
+   - 备选方案：在摄像头成功前硬性阻塞提交；因操作脆弱性而被否决。
 
-## Risks / Trade-offs
+## 风险与权衡 (Risks / Trade-offs)
 
-- Mis-recognition of visually similar items -> Mitigation: confidence display + mandatory user edit/confirm.
-- Slow recognition response on weak networks -> Mitigation: loading state, timeout, and manual bypass action.
-- Browser camera compatibility variance -> Mitigation: capability checks and file-upload fallback path.
-- Extra UX complexity in stock-in screen -> Mitigation: progressive disclosure (simple mode first, advanced details collapsed).
+- 视觉相似物品的错误识别 -> 缓解措施：置信度显示 + 强制用户编辑/确认。
+    - 网络较弱时识别响应慢 -> 缓解措施：加载状态、超时处理和手动绕过动作。
+    - 浏览器摄像头兼容性差异 -> 缓解措施：功能检查和文件上传回退路径。
+    - 入库屏幕中的额外 UX 复杂性 -> 缓解措施：渐进式披露（先显示简单模式，折叠高级详情）。

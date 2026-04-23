@@ -84,7 +84,7 @@
 
 .countdown {
   font-size: var(--font-size-xs);
-  color: #F6AD55;
+  color: #f6ad55;
   background: rgba(246, 173, 85, 0.1);
   padding: 4px 8px;
   border-radius: var(--radius-sm);
@@ -148,10 +148,10 @@
 
 .bought {
   background: rgba(72, 187, 120, 0.1);
-  color: #38A169;
+  color: #38a169;
 }
 
 .rejected {
   background: rgba(245, 101, 101, 0.1);
-  color: #E53E3E;
+  color: #e53e3e;
 }

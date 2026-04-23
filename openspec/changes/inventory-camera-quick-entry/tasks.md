@@ -1,23 +1,23 @@
-## 1. Camera-assisted entry UI
+## 1. 摄像头辅助入库 UI (Camera-assisted entry UI)
 
-- [ ] 1.1 Add camera/file capture entry point in the inventory stock-in flow.
-- [ ] 1.2 Implement preview and retry UX for captured image before recognition.
-- [ ] 1.3 Add manual fallback path when camera is unavailable or permission is denied.
+- [ ] 1.1 在库存入库流程中增加摄像头/文件捕获入口。
+- [ ] 1.2 在识别前实现捕获图像的预览和重试 UX。
+- [ ] 1.3 当摄像头不可用或权限被拒绝时，增加手动回退路径。
 
-## 2. Recognition integration and data flow
+## 2. 识别集成与数据流 (Recognition integration and data flow)
 
-- [ ] 2.1 Add recognition service call that submits captured image and receives normalized draft fields.
-- [ ] 2.2 Map recognition response into stock-in draft state (`itemNameCandidates`, `quantityGuess`, `confidence`).
-- [ ] 2.3 Add timeout/error handling and user-visible failure messaging with manual bypass.
+- [ ] 2.1 增加识别服务调用，提交捕获的图像并接收标准化的草案字段。
+- [ ] 2.2 将识别响应映射到入库草案状态（`itemNameCandidates`、`quantityGuess`、`confidence`）。
+- [ ] 2.3 增加超时/错误处理，并提供带手动绕过的用户可见失败消息。
 
-## 3. Confirmation and persistence
+## 3. 确认与持久化 (Confirmation and persistence)
 
-- [ ] 3.1 Add confirmation form that allows editing recognized content and quantity before save.
-- [ ] 3.2 Ensure save uses only user-confirmed values, not raw recognition output.
-- [ ] 3.3 Persist traceability metadata (image reference and confidence) in stock-in record payload.
+- [ ] 3.1 增加确认表单，允许在保存前编辑识别出的内容和数量。
+- [ ] 3.2 确保保存仅使用用户确认的值，而非原始识别输出。
+- [ ] 3.3 在入库记录负载中持久化可追溯性元数据（图像引用和置信度）。
 
-## 4. Validation and quality checks
+## 4. 验证与质量检查 (Validation and quality checks)
 
-- [ ] 4.1 Add unit tests for recognition mapping and failure fallback logic.
-- [ ] 4.2 Add integration tests for camera-assisted stock-in happy path and manual fallback path.
-- [ ] 4.3 Run lint/build and verify no regression in existing inventory stock-in flow.
+- [ ] 4.1 增加识别映射和失败回退逻辑的单元测试。
+- [ ] 4.2 增加摄像头辅助入库正常路径和手动回退路径的集成测试。
+- [ ] 4.3 运行 lint/build 并验证现有的库存入库流程无回归。

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Modal, Toast, Dialog } from 'antd-mobile';
+import { Dialog, Modal, Toast } from 'antd-mobile';
+import { useEffect, useState } from 'react';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
 
@@ -55,7 +55,9 @@ const Bills = () => {
     <div className={`page-container ${styles.container}`}>
       <header className={styles.header}>
         <h1 className={styles.title}>固定账单</h1>
-        <div className={styles.addBtn} onClick={() => setIsAddVisible(true)}>+</div>
+        <div className={styles.addBtn} onClick={() => setIsAddVisible(true)}>
+          +
+        </div>
       </header>
 
       <div className={styles.billList}>
@@ -71,8 +73,15 @@ const Bills = () => {
                 </div>
               </div>
               <div className={styles.billRight}>
-                <div className={styles.billAmount}>¥{bill.amount.toLocaleString()}</div>
-                <div className={styles.deleteBtn} onClick={() => handleDelete(bill.id)}>删除</div>
+                <div className={styles.billAmount}>
+                  ¥{bill.amount.toLocaleString()}
+                </div>
+                <div
+                  className={styles.deleteBtn}
+                  onClick={() => handleDelete(bill.id)}
+                >
+                  删除
+                </div>
               </div>
             </div>
           ))
@@ -89,7 +98,9 @@ const Bills = () => {
                 className={styles.input}
                 placeholder="例如：房租、网费"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
             </div>
             <div className={styles.field}>
@@ -99,7 +110,9 @@ const Bills = () => {
                 type="number"
                 placeholder="0.00"
                 value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, amount: e.target.value })
+                }
               />
             </div>
             <div className={styles.field}>
@@ -107,13 +120,17 @@ const Bills = () => {
               <select
                 className={styles.select}
                 value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, type: e.target.value })
+                }
               >
                 <option value="monthly">按月</option>
                 <option value="yearly">按年</option>
               </select>
             </div>
-            <button className={styles.submitBtn} onClick={handleAdd}>确认添加</button>
+            <button className={styles.submitBtn} onClick={handleAdd}>
+              确认添加
+            </button>
           </div>
         }
         closeOnAction

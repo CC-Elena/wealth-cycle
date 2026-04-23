@@ -1,4 +1,8 @@
-import { PipeTransform, ArgumentMetadata, BadRequestException } from '@nestjs/common';
+import {
+  type ArgumentMetadata,
+  BadRequestException,
+  type PipeTransform,
+} from '@nestjs/common';
 
 export class ZodValidationPipe implements PipeTransform {
   constructor(private schema: any) {}

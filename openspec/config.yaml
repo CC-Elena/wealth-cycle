@@ -40,3 +40,6 @@ rules:
   specs:
     - 需按照规范对特性分块列示：即划分为 ADDED Requirements、MODIFIED Requirements 和 REMOVED Requirements。
     - 每条业务要求规则须内嵌关联测试场景，并且采用标准 BDD 语法描述（包含 GIVEN / WHEN / THEN / AND）。
+  global:
+    - 所有 OpenSpec 文档（Proposal, Design, Tasks, Specs）必须使用中文编写，包括标题和正文。
+

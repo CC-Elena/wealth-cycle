@@ -9,13 +9,13 @@ export const BudgetPlanSchema = z.object({
   userId: z.string(),
   name: z.string().min(1),
   categoryIds: z.array(z.string()).min(1), // 绑定的分类 ID 列表
-  totalAmount: z.number().positive(),       // 目标额度
-  spentAmount: z.number().default(0),       // 已消耗额度（计算字段）
+  totalAmount: z.number().positive(), // 目标额度
+  spentAmount: z.number().default(0), // 已消耗额度（计算字段）
   period: BudgetPeriodEnum.default('monthly'),
   settlement: BudgetSettlementEnum.default('carry_over'),
   icon: z.string().default('💰'),
   color: z.string().default('#6C5DD3'),
-  priority: z.number().int().default(0),    // 优先级（缩减分配时用）
+  priority: z.number().int().default(0), // 优先级（缩减分配时用）
   isActive: z.boolean().default(true),
   periodStart: z.union([z.string().datetime(), z.date()]).optional(),
   periodEnd: z.union([z.string().datetime(), z.date()]).optional(),

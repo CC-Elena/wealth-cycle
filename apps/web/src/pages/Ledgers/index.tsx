@@ -1,5 +1,13 @@
+import {
+  Button,
+  Input,
+  List,
+  Modal,
+  NavBar,
+  SpinLoading,
+  Toast,
+} from 'antd-mobile';
 import React, { useState } from 'react';
-import { NavBar, List, Modal, Input, Button, Toast, SpinLoading } from 'antd-mobile';
 import { useNavigate } from 'react-router-dom';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
@@ -65,7 +73,10 @@ const Ledgers = () => {
               )}
             </div>
             <div className={styles.ledgerBalance}>
-              总资产估值: ¥{store.ledgers.reduce((sum, l) => sum + (l.netWorth || 0), 0).toLocaleString()}
+              总资产估值: ¥
+              {store.ledgers
+                .reduce((sum, l) => sum + (l.netWorth || 0), 0)
+                .toLocaleString()}
             </div>
           </div>
           <div className={styles.checkIcon}>

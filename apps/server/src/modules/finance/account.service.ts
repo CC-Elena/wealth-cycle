@@ -1,8 +1,8 @@
-import { Injectable, Inject, BadRequestException, NotFoundException } from '@nestjs/common';
-import { eq, and, sql } from 'drizzle-orm';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { and, eq, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 

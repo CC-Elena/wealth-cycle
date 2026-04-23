@@ -1,26 +1,26 @@
-## Why
+## 核心动机 (Why)
 
-Current stock-in workflows require manual entry of item name and quantity, which slows down operators and increases input errors. We need a camera-assisted quick entry flow to reduce typing and speed up intake in real inventory scenarios.
+目前的入库流程需要手动输入物品名称和数量，这降低了操作速度并增加了输入错误的可能性。我们需要一个摄像头辅助的快速入库流程，以减少在实际库存场景中的打字工作并加快入库速度。
 
-## What Changes
+## 变更内容 (What Changes)
 
-- Add a camera capture flow in inventory stock-in to take item photos directly during entry.
-- Add image recognition processing that extracts item description candidates and estimated quantity from photos.
-- Add a confirmation step where users can edit recognized name and quantity before saving.
-- Add error/fallback handling when recognition confidence is low or recognition fails, allowing full manual input.
-- Store captured photo references and recognition metadata alongside stock-in records for traceability.
+- 在库存入库流程中增加摄像头捕捉功能，直接在入库时拍摄物品照片。
+- 增加图像识别处理，从照片中提取物品描述候选词和预估数量。
+- 增加确认步骤，用户可以在保存前编辑识别出的名称和数量。
+- 增加错误/回退处理，当识别置信度低或识别失败时，允许全手动输入。
+- 在入库记录中存储捕捉的照片引用和识别元数据，以便追溯。
 
-## Capabilities
+## 功能能力 (Capabilities)
 
-### New Capabilities
-- `camera-assisted-stock-entry`: Capture item photos in stock-in flow and use vision recognition to prefill item content and quantity.
+### 新增能力 (New Capabilities)
+- `camera-assisted-stock-entry`: 在入库流程中捕捉物品照片，并使用视觉识别预填物品内容和数量。
 
-### Modified Capabilities
-- None.
+### 变更能力 (Modified Capabilities)
+- 无。
 
-## Impact
+## 影响评估 (Impact)
 
-- Affected frontend pages/components in inventory stock-in workflow.
-- Affected inventory state/store logic for draft stock-in entries and confirmation.
-- Requires backend/API support (or existing AI gateway integration) for image recognition.
-- Introduces camera permission handling and recognition failure UX paths.
+- 影响库存入库流程中的前端页面/组件。
+- 影响库存状态/Store 逻辑，用于暂存入库分录和确认。
+- 需要后端/API 支持（或现有的 AI 网关集成）进行图像识别。
+- 引入摄像头权限处理和识别失败的 UX 路径。

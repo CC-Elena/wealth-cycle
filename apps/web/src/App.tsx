@@ -9,6 +9,7 @@ const App = () => {
   const fetchTransactions = useFinanceStore((state) => state.fetchTransactions);
   const fetchAccounts = useFinanceStore((state) => state.fetchAccounts);
   const fetchWishlist = useFinanceStore((state) => state.fetchWishlist);
+  const pullFromCloud = useFinanceStore((state) => state.pullFromCloud);
   const setIsOnline = useFinanceStore((state) => state.setIsOnline);
 
   useEffect(() => {
@@ -30,7 +31,15 @@ const App = () => {
     fetchTransactions();
     fetchAccounts();
     fetchWishlist();
-  }, [initProfile, fetchCategories, fetchTransactions, fetchAccounts, fetchWishlist]);
+    pullFromCloud();
+  }, [
+    initProfile,
+    fetchCategories,
+    fetchTransactions,
+    fetchAccounts,
+    fetchWishlist,
+    pullFromCloud,
+  ]);
 
   return <RouterProvider router={router} />;
 };

@@ -1,14 +1,15 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Layout from '../components/Layout';
-import Dashboard from '../pages/Dashboard';
-import Transactions from '../pages/Transactions';
-import Inventory from '../pages/Inventory';
-import Categories from '../pages/Categories';
-import Profile from '../pages/Profile';
-import Bills from '../pages/Bills';
+import Accounts from '../pages/Accounts';
 import Analysis from '../pages/Analysis';
-import Wishlist from '../pages/Wishlist';
+import Bills from '../pages/Bills';
+import Categories from '../pages/Categories';
+import Dashboard from '../pages/Dashboard';
+import Inventory from '../pages/Inventory';
 import Ledgers from '../pages/Ledgers';
+import Profile from '../pages/Profile';
+import Transactions from '../pages/Transactions';
+import Wishlist from '../pages/Wishlist';
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
       { path: 'analysis', element: <Analysis /> },
       { path: 'wishlist', element: <Wishlist /> },
       { path: 'ledgers', element: <Ledgers /> },
+      { path: 'accounts', element: <Accounts /> },
     ],
   },
 ]);

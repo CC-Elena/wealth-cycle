@@ -1,9 +1,9 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
-import { eq, and, sql, gte } from 'drizzle-orm';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { and, eq, gte, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { v4 as uuidv4 } from 'uuid';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 
@@ -76,4 +76,40 @@ export class WishlistService {
       .set({ status, updatedAt: new Date() })
       .where(eq(schema.wishlistItems.id, id));
   }
+
+  /**
+   * 评估项目评分
+   */
+  async evaluateItem(id: string, scores: {
+    need: number;
+    joy: number;
+    finance: number;
+    utility: number;
+    alternative: number;
+  }) {
+    // 总分计算逻辑 (简单加权平均)
+    // Need: 30%, Joy: 20%, Finance: 20%, Utility: 20%, Alternative: 10%
+    const total = (
+      scores.need * 0.3 + 
+      scores.joy * 0.2 + 
+      scores.finance * 0.2 + 
+      scores.utility * 0.2 + 
+      scores.alternative * 0.1
+    );
+
+    await this.db.update(schema.wishlistItems)
+      .set({
+        scoreNeed: scores.need,
+        scoreJoy: scores.joy,
+        scoreFinance: scores.finance,
+        scoreUtility: scores.utility,
+        scoreAlternative: scores.alternative,
+        scoreTotal: total,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.wishlistItems.id, id));
+
+    return { total };
+  }
 }
+

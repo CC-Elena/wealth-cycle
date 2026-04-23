@@ -1,9 +1,9 @@
-import { Injectable, Inject, BadRequestException, Logger } from '@nestjs/common';
-import { DB_CONNECTION } from '../../database/database.module';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import * as schema from '../../database/schema';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { eq, sql } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { DB_CONNECTION } from '../../database/database.module';
+import * as schema from '../../database/schema';
 
 @Injectable()
 export class SavingsService {
@@ -41,7 +41,7 @@ export class SavingsService {
 
       // 2. 记录日志
       await tx.insert(schema.savingsLogs).values({
-        id: uuidv4(),
+        id: randomUUID(),
         userId,
         amount,
         type: 'transfer_in',
@@ -87,7 +87,7 @@ export class SavingsService {
 
       // 2. 记录日志（包含强制理由）
       await tx.insert(schema.savingsLogs).values({
-        id: uuidv4(),
+        id: randomUUID(),
         userId,
         amount,
         type: 'draw_emergency',

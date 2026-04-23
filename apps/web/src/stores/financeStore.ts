@@ -1,10 +1,9 @@
+import { Toast } from 'antd-mobile';
+import ky from 'ky';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import ky from 'ky';
-import { Toast } from 'antd-mobile';
 import type { BudgetBlock, Transaction, UserProfile } from '../types';
 
-// 后端分类数据的类型
 export interface BackendCategory {
   id: string;
   userId: string;
@@ -17,6 +16,13 @@ export interface BackendCategory {
   sortOrder: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BackendTag {
+  id: string;
+  name: string;
+  color: string;
+  isActive: boolean;
 }
 
 // 后端交易数据的类型
@@ -105,6 +111,17 @@ export interface HealthStats {
   survivalDays: number;
 }
 
+export interface PredictionStat {
+  budgetId: string;
+  name: string;
+  spent: number;
+  budget: number;
+  predictedEnd: number;
+  risk: 'safe' | 'medium' | 'high';
+  daysElapsed: number;
+  totalDays: number;
+}
+
 export interface Ledger {
   id: string;
   userId: string;
@@ -128,17 +145,21 @@ interface FinanceState {
   wishlistItems: WishlistItem[];
   budgets: BudgetBlock[];
   categories: BackendCategory[];
-  fixedBills: FixedBill[]; 
+  tags: BackendTag[];
+  fixedBills: FixedBill[];
   profile: UserProfile;
   healthStats: HealthStats | null;
   healthReport: HealthReport | null;
-  chatMessages: ChatMessage[]; 
-  isAgentLoading: boolean; 
+  chatMessages: ChatMessage[];
+  isAgentLoading: boolean;
   pendingProposals: AgentProposal[];
   ledgers: Ledger[];
   currentLedgerId: string | 'global' | null;
   isOnline: boolean;
   offlineQueue: any[];
+  lastSyncTime: string | null;
+  predictions: PredictionStat[];
+  inventoryItems: any[]; // 暂定 any，后续可细化
 
   // --- 核心计算值 ---
   disposableIncome: number;
@@ -147,8 +168,8 @@ interface FinanceState {
   addTransaction: (tx: Omit<Transaction, 'id' | 'timestamp'>) => void;
   processPayroll: (amount: number, date: string) => void;
   updateBudget: (id: string, newTotal: number) => void;
-  askAgent: (message: string) => Promise<void>; 
-  clearChat: () => void; 
+  askAgent: (message: string) => Promise<void>;
+  clearChat: () => void;
 
   // Backend Integration
   initProfile: () => Promise<void>;
@@ -156,10 +177,30 @@ interface FinanceState {
   switchLedger: (id: string) => Promise<void>;
   updatePreferences: (data: Partial<UserProfile>) => Promise<void>;
   fetchCategories: () => Promise<void>;
+  fetchTags: () => Promise<void>;
   fetchTransactions: () => Promise<void>;
   fetchAccounts: () => Promise<void>;
+  createAccount: (data: {
+    name: string;
+    type: string;
+    balance: number;
+    icon: string;
+    color: string;
+    isDefault: boolean;
+  }) => Promise<void>;
+  updateAccount: (id: string, data: Partial<Account>) => Promise<void>;
+  deleteAccount: (id: string) => Promise<void>;
+  transferAccounts: (data: {
+    fromAccountId: string;
+    toAccountId: string;
+    amount: number;
+    memo?: string;
+  }) => Promise<void>;
   fetchWishlist: () => Promise<void>;
-  updateWishlistStatus: (id: string, status: WishlistItem['status']) => Promise<void>;
+  updateWishlistStatus: (
+    id: string,
+    status: WishlistItem['status'],
+  ) => Promise<void>;
   fetchBudgets: () => Promise<void>;
   fetchFixedBills: () => Promise<void>;
   fetchHealthStats: () => Promise<void>;
@@ -182,8 +223,12 @@ interface FinanceState {
     type?: string;
     memo?: string;
     items?: any[]; // Sync with implementation
+    tagIds?: string[];
   }) => Promise<void>;
-  createLedgerOnServer: (data: { name: string; icon?: string }) => Promise<void>;
+  createLedgerOnServer: (data: {
+    name: string;
+    icon?: string;
+  }) => Promise<void>;
   fetchProposals: () => Promise<void>;
   executeProposalOnServer: (id: string) => Promise<void>;
   rejectProposalOnServer: (id: string) => Promise<void>;
@@ -191,7 +236,31 @@ interface FinanceState {
   fetchCategoryDist: (start?: string, end?: string) => Promise<any[]>;
   setIsOnline: (status: boolean) => void;
   syncOfflineQueue: () => Promise<void>;
+  fetchPredictions: () => Promise<void>;
+  pullFromCloud: () => Promise<void>;
+  mutate: (change: {
+    entityType: string;
+    entityId: string;
+    operation: 'create' | 'update' | 'delete';
+    changes: any;
+    ledgerId?: string;
+  }) => Promise<void>;
   getLedgerHeader: () => Record<string, string>;
+  exportData: () => Promise<void>;
+  fetchInventoryItems: () => Promise<void>;
+  recordWasteOnServer: (data: {
+    itemId: string;
+    quantity: number;
+    reason: string;
+  }) => Promise<void>;
+  evaluateWishlistItemOnServer: (id: string, scores: any) => Promise<void>;
+
+  fetchInventoryItems: () => Promise<void>;
+  recordWasteOnServer: (data: {
+    itemId: string;
+    quantity: number;
+    reason: string;
+  }) => Promise<void>;
 
   // 初始化 Mock
   resetToMock: () => void;
@@ -250,6 +319,7 @@ export const useFinanceStore = create<FinanceState>()(
       backendTransactions: [],
       budgets: MOCK_BUDGETS,
       categories: [],
+      tags: [],
       fixedBills: [],
       profile: MOCK_PROFILE,
       healthStats: null,
@@ -264,6 +334,9 @@ export const useFinanceStore = create<FinanceState>()(
       currentLedgerId: null,
       isOnline: navigator.onLine,
       offlineQueue: [],
+      lastSyncTime: null,
+      predictions: [],
+      inventoryItems: [],
 
       addTransaction: (tx) => {
         set((state) => {
@@ -279,7 +352,9 @@ export const useFinanceStore = create<FinanceState>()(
             if (b) {
               b.spentAmount += tx.amount;
             } else {
-              set((state) => ({ disposableIncome: state.disposableIncome - tx.amount }));
+              set((state) => ({
+                disposableIncome: state.disposableIncome - tx.amount,
+              }));
             }
           }
 
@@ -302,29 +377,37 @@ export const useFinanceStore = create<FinanceState>()(
         }));
       },
 
-      updateBudget: (id, newTotal) => {
-        set((state) => ({
-          budgets: state.budgets.map((b) =>
-            b.id === id ? { ...b, totalAmount: newTotal } : b,
-          ),
-        }));
+      updateBudget: async (id, newTotal) => {
+        try {
+          await get().mutate({
+            entityType: 'budget',
+            entityId: id,
+            operation: 'update',
+            changes: { totalAmount: newTotal },
+          });
+          await get().fetchBudgets();
+        } catch (error) {
+          console.error('Failed to update budget', error);
+        }
       },
 
       askAgent: async (message: string) => {
         const currentMessages = get().chatMessages;
         const newMessages: ChatMessage[] = [
           ...currentMessages,
-          { role: 'user', content: message }
+          { role: 'user', content: message },
         ];
 
         set({ chatMessages: newMessages, isAgentLoading: true });
 
         try {
-          const response = await ky.post(`${API_BASE}/agent/chat`, {
-            json: { messages: newMessages },
-            headers: { 'x-ledger-id': get().currentLedgerId || '' },
-            timeout: 60000
-          }).json<any>();
+          const response = await ky
+            .post(`${API_BASE}/agent/chat`, {
+              json: { messages: newMessages },
+              headers: { 'x-ledger-id': get().currentLedgerId || '' },
+              timeout: 60000,
+            })
+            .json<any>();
 
           const assistantMsg = response.choices[0].message;
           const toolCalls = assistantMsg.tool_calls;
@@ -332,13 +415,13 @@ export const useFinanceStore = create<FinanceState>()(
           set((state) => ({
             chatMessages: [
               ...state.chatMessages,
-              { 
-                role: 'assistant', 
-                content: assistantMsg.content || '', 
-                toolCalls 
-              }
+              {
+                role: 'assistant',
+                content: assistantMsg.content || '',
+                toolCalls,
+              },
             ],
-            isAgentLoading: false
+            isAgentLoading: false,
           }));
 
           // 如果有提议，刷新提议列表
@@ -351,8 +434,8 @@ export const useFinanceStore = create<FinanceState>()(
           set((state) => ({
             chatMessages: [
               ...state.chatMessages,
-              { role: 'assistant', content: '抱歉，我现在无法处理您的请求。' }
-            ]
+              { role: 'assistant', content: '抱歉，我现在无法处理您的请求。' },
+            ],
           }));
         }
       },
@@ -365,11 +448,22 @@ export const useFinanceStore = create<FinanceState>()(
 
       initProfile: async () => {
         try {
-          const { user, profile: backendProfile, ledgers } = await ky.get(`${API_BASE}/users/me`).json<{ user: any; profile: any; ledgers: Ledger[] }>();
-          
+          const {
+            user,
+            profile: backendProfile,
+            ledgers,
+          } = await ky
+            .get(`${API_BASE}/users/me`)
+            .json<{ user: any; profile: any; ledgers: Ledger[] }>();
+
           let activeLedgerId = get().currentLedgerId;
-          if (!activeLedgerId || !ledgers.find(l => l.id === activeLedgerId)) {
-            activeLedgerId = backendProfile.defaultLedgerId || (ledgers.length > 0 ? ledgers[0].id : null);
+          if (
+            !activeLedgerId ||
+            !ledgers.find((l) => l.id === activeLedgerId)
+          ) {
+            activeLedgerId =
+              backendProfile.defaultLedgerId ||
+              (ledgers.length > 0 ? ledgers[0].id : null);
           }
 
           set((state) => ({
@@ -381,7 +475,9 @@ export const useFinanceStore = create<FinanceState>()(
             },
             ledgers,
             currentLedgerId: activeLedgerId,
-            disposableIncome: ledgers.find(l => l.id === activeLedgerId)?.disposableIncome || 0,
+            disposableIncome:
+              ledgers.find((l) => l.id === activeLedgerId)?.disposableIncome ||
+              0,
           }));
         } catch (error) {
           console.error('Failed to init profile from backend', error);
@@ -390,7 +486,9 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchLedgers: async () => {
         try {
-          const ledgers = await ky.get(`${API_BASE}/finance/ledgers`).json<Ledger[]>();
+          const ledgers = await ky
+            .get(`${API_BASE}/finance/ledgers`)
+            .json<Ledger[]>();
           set({ ledgers });
         } catch (error) {
           console.error('Failed to fetch ledgers', error);
@@ -410,11 +508,15 @@ export const useFinanceStore = create<FinanceState>()(
       switchLedger: async (id: string) => {
         try {
           if (id !== 'global') {
-            await ky.post(`${API_BASE}/finance/ledgers/switch`, { json: { ledgerId: id } }).json();
+            await ky
+              .post(`${API_BASE}/finance/ledgers/switch`, {
+                json: { ledgerId: id },
+              })
+              .json();
           }
-          
+
           set({ currentLedgerId: id });
-          
+
           // 切换后刷新所有数据
           await Promise.all([
             get().fetchCategories(),
@@ -425,19 +527,23 @@ export const useFinanceStore = create<FinanceState>()(
             get().fetchHealthStats(),
             get().fetchWishlist(),
             get().fetchProposals(),
+            get().fetchInventoryItems(),
           ]);
 
           if (id === 'global') {
             // 全局视角下，可支配收入为所有账本之和
-            const totalDisposable = get().ledgers.reduce((sum, l) => sum + (l.disposableIncome || 0), 0);
+            const totalDisposable = get().ledgers.reduce(
+              (sum, l) => sum + (l.disposableIncome || 0),
+              0,
+            );
             set({ disposableIncome: totalDisposable });
           } else {
-            const currentLedger = get().ledgers.find(l => l.id === id);
+            const currentLedger = get().ledgers.find((l) => l.id === id);
             if (currentLedger) {
               set({ disposableIncome: currentLedger.disposableIncome });
             }
           }
-          
+
           Toast.show({
             content: id === 'global' ? '已切至全局视角' : '账本切换成功',
             duration: 1000,
@@ -456,7 +562,9 @@ export const useFinanceStore = create<FinanceState>()(
 
       updatePreferences: async (data) => {
         try {
-          const updatedProfile = await ky.put(`${API_BASE}/users/me/preferences`, { json: data }).json<any>();
+          const updatedProfile = await ky
+            .put(`${API_BASE}/users/me/preferences`, { json: data })
+            .json<any>();
           set((state) => ({
             profile: {
               ...state.profile,
@@ -471,20 +579,37 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchCategories: async () => {
         try {
-          const categories = await ky.get(`${API_BASE}/categories`, {
-            headers: get().getLedgerHeader()
-          }).json<BackendCategory[]>();
+          const categories = await ky
+            .get(`${API_BASE}/categories`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<BackendCategory[]>();
           set({ categories });
         } catch (error) {
           console.error('Failed to fetch categories', error);
         }
       },
 
+      fetchTags: async () => {
+        try {
+          const tags = await ky
+            .get(`${API_BASE}/tags`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<BackendTag[]>();
+          set({ tags });
+        } catch (error) {
+          console.error('Failed to fetch tags', error);
+        }
+      },
+
       fetchBudgets: async () => {
         try {
-          const budgets = await ky.get(`${API_BASE}/budgets`, {
-            headers: { 'x-ledger-id': get().currentLedgerId || '' }
-          }).json<BudgetBlock[]>();
+          const budgets = await ky
+            .get(`${API_BASE}/budgets`, {
+              headers: { 'x-ledger-id': get().currentLedgerId || '' },
+            })
+            .json<BudgetBlock[]>();
           set({ budgets });
         } catch (error) {
           console.error('Failed to fetch budgets', error);
@@ -493,9 +618,11 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchFixedBills: async () => {
         try {
-          const fixedBills = await ky.get(`${API_BASE}/fixed-bills`, {
-            headers: { 'x-ledger-id': get().currentLedgerId || '' }
-          }).json<FixedBill[]>();
+          const fixedBills = await ky
+            .get(`${API_BASE}/fixed-bills`, {
+              headers: { 'x-ledger-id': get().currentLedgerId || '' },
+            })
+            .json<FixedBill[]>();
           set({ fixedBills });
         } catch (error) {
           console.error('Failed to fetch fixed bills', error);
@@ -504,9 +631,11 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchHealthStats: async () => {
         try {
-          const healthStats = await ky.get(`${API_BASE}/health/stats`, {
-            headers: get().getLedgerHeader()
-          }).json<HealthStats>();
+          const healthStats = await ky
+            .get(`${API_BASE}/health/stats`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<HealthStats>();
           set({ healthStats });
         } catch (error) {
           console.error('Failed to fetch health stats', error);
@@ -515,10 +644,14 @@ export const useFinanceStore = create<FinanceState>()(
 
       createFixedBillOnServer: async (data) => {
         try {
-          await ky.post(`${API_BASE}/fixed-bills`, { 
-            json: data,
-            headers: get().getLedgerHeader()
-          }).json();
+          const entityId = `fb-${Math.random().toString(36).substr(2, 9)}`;
+          await get().mutate({
+            entityType: 'fixed_bill',
+            entityId,
+            operation: 'create',
+            changes: data,
+          });
+          // 重新拉取以确保 UI 同步
           await get().fetchFixedBills();
         } catch (error) {
           console.error('Failed to create fixed bill', error);
@@ -528,7 +661,12 @@ export const useFinanceStore = create<FinanceState>()(
 
       deleteFixedBillOnServer: async (id) => {
         try {
-          await ky.delete(`${API_BASE}/fixed-bills/${id}`).json();
+          await get().mutate({
+            entityType: 'fixed_bill',
+            entityId: id,
+            operation: 'delete',
+            changes: { id },
+          });
           await get().fetchFixedBills();
         } catch (error) {
           console.error('Failed to delete fixed bill', error);
@@ -537,18 +675,22 @@ export const useFinanceStore = create<FinanceState>()(
       },
 
       getPayrollPreview: async (salary: number) => {
-        return ky.post(`${API_BASE}/payroll/preview`, { 
-          json: { salary },
-          headers: get().getLedgerHeader()
-        }).json();
+        return ky
+          .post(`${API_BASE}/payroll/preview`, {
+            json: { salary },
+            headers: get().getLedgerHeader(),
+          })
+          .json();
       },
 
       executePayroll: async (data: { salaryAmount: number }) => {
         try {
-          await ky.post(`${API_BASE}/payroll/execute`, { 
-            json: data,
-            headers: get().getLedgerHeader()
-          }).json();
+          await ky
+            .post(`${API_BASE}/payroll/execute`, {
+              json: data,
+              headers: get().getLedgerHeader(),
+            })
+            .json();
           // 刷新全量数据以反映资金变化和时间周期变化
           await Promise.all([
             get().initProfile(),
@@ -563,9 +705,11 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchTransactions: async () => {
         try {
-          const backendTransactions = await ky.get(`${API_BASE}/transactions`, {
-            headers: get().getLedgerHeader()
-          }).json<BackendTransaction[]>();
+          const backendTransactions = await ky
+            .get(`${API_BASE}/transactions`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<BackendTransaction[]>();
           set({ backendTransactions });
         } catch (error) {
           console.error('Failed to fetch transactions', error);
@@ -574,20 +718,84 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchAccounts: async () => {
         try {
-          const accounts = await ky.get(`${API_BASE}/accounts`, {
-            headers: get().getLedgerHeader()
-          }).json<Account[]>();
+          const accounts = await ky
+            .get(`${API_BASE}/accounts`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<Account[]>();
           set({ accounts });
         } catch (error) {
           console.error('Failed to fetch accounts', error);
         }
       },
 
+      createAccount: async (data) => {
+        try {
+          await ky
+            .post(`${API_BASE}/accounts`, {
+              json: data,
+              headers: get().getLedgerHeader(),
+            })
+            .json();
+          await get().fetchAccounts();
+          await get().initProfile(); // Profile displays net worth
+        } catch (error) {
+          console.error('Failed to create account', error);
+          throw error;
+        }
+      },
+
+      updateAccount: async (id, data) => {
+        try {
+          await ky
+            .patch(`${API_BASE}/accounts/${id}`, {
+              json: data,
+              headers: get().getLedgerHeader(),
+            })
+            .json();
+          await get().fetchAccounts();
+        } catch (error) {
+          console.error('Failed to update account', error);
+          throw error;
+        }
+      },
+
+      deleteAccount: async (id) => {
+        try {
+          await ky
+            .delete(`${API_BASE}/accounts/${id}`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json();
+          await get().fetchAccounts();
+        } catch (error) {
+          console.error('Failed to delete account', error);
+          throw error;
+        }
+      },
+
+      transferAccounts: async (data) => {
+        try {
+          await ky
+            .post(`${API_BASE}/accounts/transfer`, {
+              json: data,
+              headers: get().getLedgerHeader(),
+            })
+            .json();
+          await Promise.all([get().fetchAccounts(), get().fetchTransactions()]);
+        } catch (error) {
+          console.error('Failed to transfer between accounts', error);
+          throw error;
+        }
+      },
+
       fetchWishlist: async () => {
         try {
-          const items = await ky.get(`${API_BASE}/finance/wishlist`, {
-            headers: get().getLedgerHeader()
-          }).json<WishlistItem[]>();
+          const items = await ky
+            .get(`${API_BASE}/finance/wishlist`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<WishlistItem[]>();
           set({ wishlistItems: items });
         } catch (error) {
           console.error('Failed to fetch wishlist', error);
@@ -596,7 +804,11 @@ export const useFinanceStore = create<FinanceState>()(
 
       updateWishlistStatus: async (id, status) => {
         try {
-          await ky.post(`${API_BASE}/finance/wishlist/${id}/status`, { json: { status } });
+          await ky
+            .post(`${API_BASE}/finance/wishlist/${id}/status`, {
+              json: { status },
+            })
+            .json();
           await get().fetchWishlist();
           if (status === 'bought') {
             await get().fetchAccounts();
@@ -606,11 +818,28 @@ export const useFinanceStore = create<FinanceState>()(
         }
       },
 
+      evaluateWishlistItemOnServer: async (id, scores) => {
+        try {
+          await ky
+            .post(`${API_BASE}/finance/wishlist/${id}/evaluate`, {
+              json: scores,
+            })
+            .json();
+          await get().fetchWishlist();
+          Toast.show({ icon: 'success', content: '评分已更新' });
+        } catch (error) {
+          console.error('Failed to evaluate wishlist item', error);
+          Toast.show({ icon: 'fail', content: '评分失败' });
+        }
+      },
+
       fetchHealthReport: async () => {
         try {
-          const report = await ky.get(`${API_BASE}/finance/health/report`, {
-            headers: { 'x-ledger-id': get().currentLedgerId || '' }
-          }).json<HealthReport>();
+          const report = await ky
+            .get(`${API_BASE}/finance/health/report`, {
+              headers: { 'x-ledger-id': get().currentLedgerId || '' },
+            })
+            .json<HealthReport>();
           set({ healthReport: report });
         } catch (error) {
           console.error('Failed to fetch health report', error);
@@ -619,9 +848,11 @@ export const useFinanceStore = create<FinanceState>()(
 
       reconcileHealth: async () => {
         try {
-          await ky.post(`${API_BASE}/finance/health/reconcile`, {
-            headers: { 'x-ledger-id': get().currentLedgerId || '' }
-          }).json();
+          await ky
+            .post(`${API_BASE}/finance/health/reconcile`, {
+              headers: { 'x-ledger-id': get().currentLedgerId || '' },
+            })
+            .json();
           await get().fetchHealthReport();
           await get().initProfile();
           Toast.show({ icon: 'success', content: '对账校准完成' });
@@ -639,6 +870,65 @@ export const useFinanceStore = create<FinanceState>()(
         }
       },
 
+      exportData: async () => {
+        try {
+          Toast.show({
+            icon: 'loading',
+            content: '正在准备导出数据...',
+            duration: 0,
+          });
+          const data = await ky.get(`${API_BASE}/finance/export`).json<any>();
+
+          const blob = new Blob([JSON.stringify(data, null, 2)], {
+            type: 'application/json',
+          });
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `stock-data-export-${new Date().toISOString().split('T')[0]}.json`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+
+          Toast.clear();
+          Toast.show({ icon: 'success', content: '数据导出成功' });
+        } catch (error) {
+          console.error('Failed to export data', error);
+          Toast.clear();
+          Toast.show({ icon: 'fail', content: '导出失败' });
+        }
+      },
+
+      fetchInventoryItems: async () => {
+        try {
+          const items = await ky
+            .get(`${API_BASE}/inventory/items`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<any[]>();
+          set({ inventoryItems: items });
+        } catch (error) {
+          console.error('Failed to fetch inventory items', error);
+        }
+      },
+
+      recordWasteOnServer: async (data) => {
+        try {
+          await ky
+            .post(`${API_BASE}/inventory/waste`, {
+              json: data,
+              headers: get().getLedgerHeader(),
+            })
+            .json();
+          await get().fetchInventoryItems();
+          Toast.show({ icon: 'success', content: '浪费记录已提交' });
+        } catch (error) {
+          console.error('Failed to record waste', error);
+          Toast.show({ icon: 'fail', content: '提交失败' });
+        }
+      },
+
       setIsOnline: (status) => {
         const wasOffline = !get().isOnline;
         set({ isOnline: status });
@@ -651,35 +941,114 @@ export const useFinanceStore = create<FinanceState>()(
         const queue = get().offlineQueue;
         if (queue.length === 0) return;
 
-        Toast.show({ icon: 'loading', content: '同步离线数据...', duration: 0 });
-        
-        const remaining: any[] = [];
-        for (const action of queue) {
-          try {
-            if (action.type === 'create_transaction') {
-              await ky.post(`${API_BASE}/transactions`, { 
-                json: action.payload,
-                headers: { 'x-ledger-id': action.ledgerId || '' }
-              }).json();
-            }
-            // 可以扩展其他类型
-          } catch (error) {
-            console.error('Failed to sync offline action', action, error);
-            remaining.push(action);
-          }
-        }
+        const isOnline = get().isOnline;
+        if (!isOnline) return;
 
-        set({ offlineQueue: remaining });
-        Toast.clear();
-        
-        if (remaining.length > 0) {
-          Toast.show({ icon: 'fail', content: `${remaining.length} 项数据同步失败` });
+        Toast.show({
+          icon: 'loading',
+          content: '同步离线数据...',
+          duration: 0,
+        });
+
+        try {
+          // 使用统一的 push 接口提交变更日志
+          const results = await ky
+            .post(`${API_BASE}/sync/push`, {
+              json: { changes: queue },
+            })
+            .json<any[]>();
+
+          const failed = results.filter((r) => r.status === 'failed');
+
+          if (failed.length > 0) {
+            console.error('Some changes failed to sync', failed);
+            // 简单处理：保留失败项，或者在此处做更复杂的冲突处理
+            // 为简化，目前只保留未成功的
+            const failedIds = new Set(failed.map((f) => f.entityId));
+            set({
+              offlineQueue: queue.filter((q) => failedIds.has(q.entityId)),
+            });
+            Toast.show({
+              icon: 'fail',
+              content: `${failed.length} 项数据同步失败`,
+            });
+          } else {
+            set({ offlineQueue: [] });
+            set({ lastSyncTime: new Date().toISOString() });
+            Toast.show({ icon: 'success', content: '同步完成' });
+
+            // 同步成功后刷新受影响的数据
+            await Promise.all([
+              get().initProfile(),
+              get().fetchTransactions(),
+              get().fetchBudgets(),
+            ]);
+          }
+        } catch (error) {
+          console.error('Sync failed', error);
+          Toast.show({ icon: 'fail', content: '同步失败，请检查网络' });
+        } finally {
+          Toast.clear();
+        }
+      },
+
+      fetchPredictions: async () => {
+        try {
+          const stats = await ky
+            .get(`${API_BASE}/finance/stats/prediction`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<PredictionStat[]>();
+          set({ predictions: stats });
+        } catch (error) {
+          console.error('Failed to fetch predictions', error);
+        }
+      },
+
+      pullFromCloud: async () => {
+        try {
+          const lastSync = get().lastSyncTime;
+          const changes = await ky
+            .get(`${API_BASE}/sync/pull`, {
+              searchParams: lastSync ? { since: lastSync } : {},
+            })
+            .json<any[]>();
+
+          if (changes.length > 0) {
+            this.logger.log(`Pulled ${changes.length} changes from cloud`);
+            // 根据 changes 类型执行增量更新 (Incremental Merge)
+            // 这里简单刷新全量数据作为 LWW 补充
+            await Promise.all([
+              get().fetchTransactions(),
+              get().fetchBudgets(),
+              get().fetchAccounts(),
+            ]);
+            set({ lastSyncTime: new Date().toISOString() });
+          }
+        } catch (error) {
+          console.error('Failed to pull changes', error);
+        }
+      },
+
+      mutate: async (change) => {
+        const fullChange = {
+          ...change,
+          timestamp: new Date().toISOString(),
+          ledgerId: change.ledgerId || get().currentLedgerId || '',
+        };
+
+        // 1. 乐观更新预览（如果需要，这里可以根据 entityType 做分支）
+        // 这里为了 generic 暂不实现过于复杂的乐观 UI，但在调用方可自行处理
+
+        // 2. 环境判定与入队
+        set((state) => ({
+          offlineQueue: [...state.offlineQueue, fullChange],
+        }));
+
+        if (get().isOnline) {
+          await get().syncOfflineQueue();
         } else {
-          Toast.show({ icon: 'success', content: '所有离线数据已同步' });
-          // 同步成功后全面刷新，确保数据一致
-          get().initProfile();
-          get().fetchTransactions();
-          get().fetchBudgets();
+          Toast.show('离线状态：变更已加入同步队列');
         }
       },
 
@@ -689,12 +1058,13 @@ export const useFinanceStore = create<FinanceState>()(
         type?: string;
         memo?: string;
         items?: any[];
+        tagIds?: string[];
       }) => {
-        const ledgerId = get().currentLedgerId || '';
-        
+        const entityId = `tx-${Math.random().toString(36).substr(2, 9)}`;
+
         // 1. 立即执行乐观更新 (Optimistic UI)
         const optimisticTx: BackendTransaction = {
-          id: `opt-${Math.random().toString(36).substr(2, 9)}`,
+          id: entityId,
           userId: 'local',
           amount: data.amount,
           categoryId: data.categoryId,
@@ -710,26 +1080,16 @@ export const useFinanceStore = create<FinanceState>()(
           backendTransactions: [optimisticTx, ...state.backendTransactions],
         }));
 
-        // 2. 环境判断
-        if (!navigator.onLine) {
-          set((state) => ({
-            offlineQueue: [
-              ...state.offlineQueue,
-              { type: 'create_transaction', payload: data, ledgerId, timestamp: Date.now() },
-            ],
-          }));
-          Toast.show('离线状态：交易已暂存');
-          return;
-        }
-
-        // 3. 在线执行
+        // 2. 使用通用 mutate 逻辑
         try {
-          await ky.post(`${API_BASE}/transactions`, { 
-            json: data,
-            headers: { 'x-ledger-id': ledgerId }
-          }).json();
-          
-          // 刷新全量数据
+          await get().mutate({
+            entityType: 'transaction',
+            entityId,
+            operation: 'create',
+            changes: data,
+          });
+
+          // 3. 刷新受影响的数据
           await Promise.all([
             get().fetchTransactions(),
             get().fetchBudgets(),
@@ -737,9 +1097,11 @@ export const useFinanceStore = create<FinanceState>()(
           ]);
         } catch (error) {
           console.error('Failed to create transaction', error);
-          // 如果失败（且不是网络断开导致的），回滚乐观更新
+          // 回滚乐观更新
           set((state) => ({
-            backendTransactions: state.backendTransactions.filter(tx => tx.id !== optimisticTx.id),
+            backendTransactions: state.backendTransactions.filter(
+              (tx) => tx.id !== entityId,
+            ),
           }));
           throw error;
         }
@@ -747,9 +1109,11 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchProposals: async () => {
         try {
-          const proposals = await ky.get(`${API_BASE}/agent/proposals`, {
-            headers: get().getLedgerHeader()
-          }).json<AgentProposal[]>();
+          const proposals = await ky
+            .get(`${API_BASE}/agent/proposals`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json<AgentProposal[]>();
           set({ pendingProposals: proposals });
         } catch (error) {
           console.error('Failed to fetch proposals', error);
@@ -758,9 +1122,11 @@ export const useFinanceStore = create<FinanceState>()(
 
       executeProposalOnServer: async (id: string) => {
         try {
-          await ky.post(`${API_BASE}/agent/proposals/${id}/execute`, {
-            headers: get().getLedgerHeader()
-          }).json();
+          await ky
+            .post(`${API_BASE}/agent/proposals/${id}/execute`, {
+              headers: get().getLedgerHeader(),
+            })
+            .json();
           await Promise.all([
             get().fetchProposals(),
             get().fetchTransactions(),
@@ -785,10 +1151,12 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchTrend: async (months = 6) => {
         try {
-          return await ky.get(`${API_BASE}/finance/stats/trend`, { 
-            searchParams: { months },
-            headers: get().getLedgerHeader()
-          }).json<any[]>();
+          return await ky
+            .get(`${API_BASE}/finance/stats/trend`, {
+              searchParams: { months },
+              headers: get().getLedgerHeader(),
+            })
+            .json<any[]>();
         } catch (error) {
           console.error('Failed to fetch trend', error);
           return [];
@@ -797,13 +1165,15 @@ export const useFinanceStore = create<FinanceState>()(
 
       fetchCategoryDist: async (start, end) => {
         try {
-          return await ky.get(`${API_BASE}/finance/stats/categories`, { 
-            searchParams: { 
-              ...(start && { start }), 
-              ...(end && { end }) 
-            },
-            headers: get().getLedgerHeader()
-          }).json<any[]>();
+          return await ky
+            .get(`${API_BASE}/finance/stats/categories`, {
+              searchParams: {
+                ...(start && { start }),
+                ...(end && { end }),
+              },
+              headers: get().getLedgerHeader(),
+            })
+            .json<any[]>();
         } catch (error) {
           console.error('Failed to fetch category distribution', error);
           return [];
@@ -816,6 +1186,7 @@ export const useFinanceStore = create<FinanceState>()(
           backendTransactions: [],
           budgets: MOCK_BUDGETS,
           categories: [],
+          tags: [],
           profile: MOCK_PROFILE,
           disposableIncome: 8500,
           pendingProposals: [],

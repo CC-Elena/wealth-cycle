@@ -1,6 +1,6 @@
-import { Controller, Post, Body, Headers } from '@nestjs/common';
-import { AgentService } from './agent.service';
-import { ReviewService } from '../finance/review.service';
+import { Body, Controller, Headers, Post } from '@nestjs/common';
+import type { ReviewService } from '../finance/review.service';
+import type { AgentService } from './agent.service';
 
 @Controller('agent')
 export class AgentController {

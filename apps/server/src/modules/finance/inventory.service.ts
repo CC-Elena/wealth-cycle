@@ -1,9 +1,12 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../../database/schema';
-import { eq, and, sql, desc, asc } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
+
+
+import type { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class InventoryService {
@@ -11,7 +14,10 @@ export class InventoryService {
 
   constructor(
     @Inject(DB_CONNECTION) private readonly db: BetterSQLite3Database<typeof schema>,
+    private readonly notificationService: NotificationService,
   ) {}
+
+
 
   /**
    * 自动同步交易项至库存 (由 TransactionService 或 AgentService 触发)
@@ -47,7 +53,7 @@ export class InventoryService {
 
       // 创建入库批次
       await this.db.insert(schema.inventoryBatches).values({
-        id: uuidv4(),
+        id: randomUUID(),
         itemId: inventoryItem.id,
         transactionItemId: item.id,
         quantity: item.quantity || 1,
@@ -96,23 +102,51 @@ export class InventoryService {
       }
 
       await this.updateCurrentStock(itemId, tx);
+
+      // 触发低库存预警检测
+      this.checkAndTriggerInventoryAlert(itemId).catch(err => {
+        this.logger.error(`Failed to trigger inventory alert for ${itemId}:`, err);
+      });
     });
   }
+
+  private async checkAndTriggerInventoryAlert(itemId: string) {
+    if (!this.notificationService) return;
+
+    const item = await this.db.query.inventoryItems.findFirst({
+      where: eq(schema.inventoryItems.id, itemId),
+    });
+
+    if (item && item.currentStock <= item.minStock && item.minStock > 0) {
+      await this.notificationService.create({
+        userId: item.userId,
+        ledgerId: item.ledgerId || undefined,
+        type: 'inventory_alert',
+        title: '库存不足预警',
+        message: `物品“${item.name}”当前库存为 ${item.currentStock}${item.unit}，已低于预警水位 ${item.minStock}${item.unit}。`,
+        data: { itemId: item.id }
+      });
+    }
+  }
+
 
   /**
    * 获取低库存预警
    */
-  async getLowStockItems(userId: string, ledgerId: string) {
+  async getLowStockItems(userId: string, ledgerId?: string) {
+    const filters = [
+      eq(schema.inventoryItems.userId, userId),
+      sql`${schema.inventoryItems.currentStock} <= ${schema.inventoryItems.minStock}`
+    ];
+    
+    if (ledgerId && ledgerId !== 'global') {
+      filters.push(eq(schema.inventoryItems.ledgerId, ledgerId));
+    }
+
     return this.db
       .select()
       .from(schema.inventoryItems)
-      .where(
-        and(
-          eq(schema.inventoryItems.userId, userId),
-          eq(schema.inventoryItems.ledgerId, ledgerId),
-          sql`${schema.inventoryItems.currentStock} <= ${schema.inventoryItems.minStock}`
-        )
-      );
+      .where(and(...filters));
   }
 
   private async getOrCreateInventoryItem(
@@ -132,7 +166,8 @@ export class InventoryService {
     });
 
     if (!item) {
-      const id = uuidv4();
+      const id = randomUUID();
+
       await this.db.insert(schema.inventoryItems).values({
         id,
         userId,
@@ -180,4 +215,73 @@ export class InventoryService {
     
     return items;
   }
+  /**
+   * 记录浪费/报废
+   */
+  async recordWaste(userId: string, data: {
+    itemId: string;
+    quantity: number;
+    reason: string;
+    ledgerId?: string;
+  }) {
+    const item = await this.db.query.inventoryItems.findFirst({
+      where: and(
+        eq(schema.inventoryItems.id, data.itemId),
+        eq(schema.inventoryItems.userId, userId)
+      )
+    });
+
+    if (!item) throw new Error('Item not found');
+    if (item.currentStock < data.quantity) throw new Error('Not enough stock');
+
+    // 计算损失金额 (按批次平均单价估算)
+    const batches = await this.db.select().from(schema.inventoryBatches).where(eq(schema.inventoryBatches.itemId, item.id)).all();
+    const avgUnitPrice = batches.length > 0 
+      ? batches.reduce((sum, b) => sum + (b.unitPrice || 0), 0) / batches.length 
+      : 0;
+    
+    const lossAmount = avgUnitPrice * data.quantity;
+
+    return await this.db.transaction(async (tx) => {
+      // 1. 记录浪费
+      await tx.insert(schema.wasteRecords).values({
+        id: randomUUID(),
+        userId,
+        ledgerId: data.ledgerId || item.ledgerId,
+        itemId: data.itemId,
+        quantity: data.quantity,
+        reason: data.reason,
+        lossAmount,
+        date: new Date(),
+        createdAt: new Date(),
+      });
+
+      // 2. 更新库存
+      await tx.update(schema.inventoryItems)
+        .set({
+          currentStock: sql`${schema.inventoryItems.currentStock} - ${data.quantity}`,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.inventoryItems.id, data.itemId));
+
+      // 3. 消耗批次 (简单的 FIFO 逻辑)
+      let remainingToConsume = data.quantity;
+      const sortedBatches = batches.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+      for (const batch of sortedBatches) {
+        if (remainingToConsume <= 0) break;
+        if (batch.remainingQuantity <= 0) continue;
+
+        const consumedFromBatch = Math.min(batch.remainingQuantity, remainingToConsume);
+        await tx.update(schema.inventoryBatches)
+          .set({ remainingQuantity: sql`${schema.inventoryBatches.remainingQuantity} - ${consumedFromBatch}` })
+          .where(eq(schema.inventoryBatches.id, batch.id));
+        
+        remainingToConsume -= consumedFromBatch;
+      }
+
+      return { lossAmount };
+    });
+  }
 }
+

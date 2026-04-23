@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Popup, Stepper, Dialog, Toast } from 'antd-mobile';
+import { Dialog, Popup, Stepper, Toast } from 'antd-mobile';
+import { useEffect, useState } from 'react';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
 
@@ -98,20 +98,37 @@ export const PayrollGuidance = ({ visible, onClose }: PayrollGuidanceProps) => {
               <div className={styles.previewList}>
                 <div className={styles.previewItem}>
                   <span>固定账单预留：</span>
-                  <span className={styles.previewValue}>-¥{preview.fixedBillsTotal.toLocaleString()}</span>
+                  <span className={styles.previewValue}>
+                    -¥{preview.fixedBillsTotal.toLocaleString()}
+                  </span>
                 </div>
                 <div className={styles.previewItem}>
                   <span>预算池补足：</span>
-                  <span className={styles.previewValue}>-¥{preview.budgetReplenishmentTotal.toLocaleString()}</span>
+                  <span className={styles.previewValue}>
+                    -¥{preview.budgetReplenishmentTotal.toLocaleString()}
+                  </span>
                 </div>
-                <div className={styles.previewItem} style={{ borderTop: '1px solid #EEE', marginTop: 8, paddingTop: 8 }}>
+                <div
+                  className={styles.previewItem}
+                  style={{
+                    borderTop: '1px solid #EEE',
+                    marginTop: 8,
+                    paddingTop: 8,
+                  }}
+                >
                   <strong>预计生成可支配：</strong>
-                  <strong className={styles.previewValue} style={{ color: '#6C5DD3' }}>
+                  <strong
+                    className={styles.previewValue}
+                    style={{ color: '#6C5DD3' }}
+                  >
                     ¥{preview.disposableIncomeGenerated.toLocaleString()}
                   </strong>
                 </div>
               </div>
-              <p className={styles.stepDesc} style={{ fontSize: '12px', marginTop: 12, opacity: 0.6 }}>
+              <p
+                className={styles.stepDesc}
+                style={{ fontSize: '12px', marginTop: 12, opacity: 0.6 }}
+              >
                 注：系统将自动更新预算周期起止时间。
               </p>
             </div>
@@ -122,7 +139,8 @@ export const PayrollGuidance = ({ visible, onClose }: PayrollGuidanceProps) => {
               <div className={styles.stepEmoji}>💧</div>
               <h2 className={styles.stepTitle}>确认注入资金池？</h2>
               <p className={styles.stepDesc}>
-                一旦确认，账户网值将增加 ¥{payrollAmount.toLocaleString()}，且所有预算进度将进入新的周期。
+                一旦确认，账户网值将增加 ¥{payrollAmount.toLocaleString()}
+                ，且所有预算进度将进入新的周期。
               </p>
             </div>
           )}
@@ -134,7 +152,7 @@ export const PayrollGuidance = ({ visible, onClose }: PayrollGuidanceProps) => {
             onClick={handleNext}
             disabled={loading}
           >
-            {loading ? '处理中...' : (step === 3 ? '确认执行' : '下一步')}
+            {loading ? '处理中...' : step === 3 ? '确认执行' : '下一步'}
           </button>
         </div>
       </div>

@@ -1,9 +1,9 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
-import { User, UserProfile, UserPreferencesUpdate } from '@stock/shared';
+import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
+import type { User, UserPreferencesUpdate, UserProfile } from '@stock/shared';
 import { eq } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 

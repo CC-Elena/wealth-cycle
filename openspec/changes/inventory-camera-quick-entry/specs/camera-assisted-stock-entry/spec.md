@@ -1,41 +1,41 @@
-## ADDED Requirements
+## 新增需求 (ADDED Requirements)
 
-### Requirement: Camera capture entry
-The system MUST provide a camera capture step in inventory stock-in so users can take or upload an item photo as input for assisted entry.
+### 需求 (Requirement): 摄像头捕捉入口
+系统必须在库存入库流程中提供摄像头捕捉步骤，以便用户可以拍摄或上传物品照片作为辅助入库的输入。
 
-#### Scenario: Camera capture succeeds
-- **WHEN** a user opens stock-in quick entry and grants camera or file access
-- **THEN** the system captures a valid image and moves to recognition processing
+#### 场景 (Scenario): 摄像头捕捉成功
+- **WHEN** 用户打开入库快速条目并授予摄像头或文件访问权限
+- **THEN** 系统捕获有效的图像并进入识别处理
 
-#### Scenario: Camera unavailable or denied
-- **WHEN** camera capability is unavailable or permission is denied
-- **THEN** the system SHALL provide a manual input path without blocking stock-in completion
+#### 场景 (Scenario): 摄像头不可用或被拒绝
+- **WHEN** 摄像头功能不可用或权限被拒绝
+- **THEN** 系统应当提供手动输入路径，而不阻塞入库任务的完成
 
-### Requirement: Recognition-derived draft fields
-The system MUST process the captured image and produce a draft containing item content suggestion and quantity suggestion with confidence metadata.
+### 需求 (Requirement): 识别出的草案字段
+系统必须处理捕获的图像，并生成包含物品内容建议、数量建议及置信度元数据的草案。
 
-#### Scenario: Recognition returns draft data
-- **WHEN** image recognition completes successfully
-- **THEN** the system SHALL display suggested item content and quantity plus confidence for user review
+#### 场景 (Scenario): 识别返回草案数据
+- **WHEN** 图像识别成功完成
+- **THEN** 系统应当显示建议的物品内容和数量，以及置信度供用户审核
 
-#### Scenario: Recognition fails
-- **WHEN** recognition times out, errors, or returns unusable output
-- **THEN** the system SHALL keep stock-in flow available and prompt the user to enter data manually
+#### 场景 (Scenario): 识别失败
+- **WHEN** 识别超时、报错或返回不可用的输出
+- **THEN** 系统应当保持入库流程可用，并提示用户手动输入数据
 
-### Requirement: User confirmation before save
-The system MUST require explicit user confirmation of item content and quantity before persisting any stock-in record generated from camera-assisted entry.
+### 需求 (Requirement): 保存前的用户确认
+系统必须在持久化由摄像头辅助录入生成的任何入库记录之前，要求用户对物品内容和数量进行明确确认。
 
-#### Scenario: User edits recognition result
-- **WHEN** suggested values are shown
-- **THEN** the user SHALL be able to modify both item content and quantity before submission
+#### 场景 (Scenario): 用户编辑识别结果
+- **WHEN** 显示建议值
+- **THEN** 用户应当能够在提交前修改物品内容和数量
 
-#### Scenario: Submission uses confirmed values only
-- **WHEN** the user submits the stock-in form
-- **THEN** the system SHALL save only the user-confirmed values rather than raw recognition output
+#### 场景 (Scenario): 仅使用确认后的值提交
+- **WHEN** 用户提交入库表单
+- **THEN** 系统应当仅保存用户确认后的值，而非原始识别输出
 
-### Requirement: Traceability metadata
-The system MUST persist recognition metadata for camera-assisted records, including image reference and recognition confidence.
+### 需求 (Requirement): 可追溯性元数据
+系统必须为摄像头辅助录入的记录持久化识别元数据，包括图像引用和识别置信度。
 
-#### Scenario: Assisted entry saved successfully
-- **WHEN** a camera-assisted stock-in entry is saved
-- **THEN** the record SHALL include source image reference and confidence metadata for auditability
+#### 场景 (Scenario): 辅助录入成功保存
+- **WHEN** 保存一个摄像头辅助的入库分录
+- **THEN** 该记录应当包含原始图像引用和置信度元数据，以便审计

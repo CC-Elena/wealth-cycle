@@ -1,21 +1,23 @@
-import { Controller, Get, Post, Body, Query, UsePipes, Put, Param, Delete, Headers } from '@nestjs/common';
-import { CategoryService } from './category.service';
-import { TransactionService } from './transaction.service';
-import { BudgetService } from './budget.service';
-import { PayrollService } from './payroll.service';
-import { UserService } from '../user/user.service';
-import { AccountService } from './account.service';
-import { WishlistService } from './wishlist.service';
-import { GovernanceService } from './governance.service';
-import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import { Body, Controller, Delete, Get, Headers, Param, Post, Put, Query, UsePipes } from '@nestjs/common';
 import { 
-  CreateCategorySchema, 
-  CreateTransactionSchema, 
   CreateBudgetPlanSchema, 
-  UpdateBudgetPlanSchema,
+  CreateCategorySchema, 
   CreateFixedBillSchema,
-  CreatePayrollEventSchema
+  CreatePayrollEventSchema, 
+  CreateTransactionSchema, 
+  UpdateBudgetPlanSchema
 } from '@stock/shared';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import type { UserService } from '../user/user.service';
+import type { AccountService } from './account.service';
+import type { BudgetService } from './budget.service';
+import type { CategoryService } from './category.service';
+import type { GovernanceService } from './governance.service';
+import type { InventoryService } from './inventory.service';
+import type { PayrollService } from './payroll.service';
+import type { PredictionService } from './prediction.service';
+import type { TransactionService } from './transaction.service';
+import type { WishlistService } from './wishlist.service';
 
 @Controller()
 export class FinanceController {
@@ -28,7 +30,24 @@ export class FinanceController {
     private readonly accountService: AccountService,
     private readonly wishlistService: WishlistService,
     private readonly governanceService: GovernanceService,
+    private readonly predictionService: PredictionService,
+    private readonly inventoryService: InventoryService,
   ) {}
+
+
+  @Get('finance/stats/prediction')
+  getPredictions(@Headers('x-ledger-id') ledgerId: string) {
+    return this.predictionService.getBudgetPredictions(ledgerId);
+  }
+
+  @Post('finance/budgets/transfer')
+  transferBudgets(
+    @Headers('x-ledger-id') ledgerId: string,
+    @Body() body: { fromId: string | null; toId: string; amount: number; reason: string }
+  ) {
+    // 这里暂时使用 mock userId 1，实际应从 Auth 获取
+    return this.predictionService.transferFunds('1', ledgerId, body.fromId, body.toId, body.amount, body.reason);
+  }
 
   @Get('accounts')
   getAccounts(@Headers('x-ledger-id') ledgerId: string) {
@@ -37,7 +56,11 @@ export class FinanceController {
 
   @Get('health/stats')
   async getHealthStats(@Headers('x-ledger-id') ledgerId: string) {
+    // 异步触发发薪提醒检查
+    this.governanceService.checkPaydayReminders('default-local-user-1').catch(() => {});
+
     const isGlobal = ledgerId === 'global';
+
     const targetId = isGlobal ? undefined : ledgerId;
     
     const spendingStats = this.transactionService.getDailySpendingStats(targetId);
@@ -75,6 +98,21 @@ export class FinanceController {
     return this.wishlistService.updateStatus(id, status);
   }
 
+  @Post('finance/wishlist/:id/evaluate')
+  evaluateWishlistItem(
+    @Param('id') id: string,
+    @Body() scores: {
+      need: number;
+      joy: number;
+      finance: number;
+      utility: number;
+      alternative: number;
+    }
+  ) {
+    return this.wishlistService.evaluateItem(id, scores);
+  }
+
+
   @Get('finance/health/report')
   getHealthReport(@Headers('x-ledger-id') ledgerId: string) {
     return this.governanceService.getSystemHealthReport(ledgerId === 'global' ? undefined : ledgerId);
@@ -89,6 +127,12 @@ export class FinanceController {
   backup() {
     return this.governanceService.backupDatabase();
   }
+
+  @Get('finance/export')
+  exportData() {
+    return this.governanceService.exportAllData('default-local-user-1');
+  }
+
 
   @Get('finance/stats/trend')
   getMonthlyTrend(
@@ -198,4 +242,20 @@ export class FinanceController {
   deleteFixedBill(@Param('id') id: string) {
     return this.payrollService.deleteFixedBill(id);
   }
+
+  // ─── Inventory ───
+
+  @Get('inventory/items')
+  getInventoryItems(@Headers('x-ledger-id') ledgerId: string) {
+    return this.inventoryService.getInventoryItems(ledgerId === 'global' ? undefined : ledgerId);
+  }
+
+  @Post('inventory/waste')
+  recordWaste(
+    @Headers('x-ledger-id') ledgerId: string,
+    @Body() body: { itemId: string; quantity: number; reason: string }
+  ) {
+    return this.inventoryService.recordWaste('default-local-user-1', { ...body, ledgerId });
+  }
 }
+

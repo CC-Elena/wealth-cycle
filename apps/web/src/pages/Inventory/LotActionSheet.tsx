@@ -1,5 +1,5 @@
+import { Popup, Stepper, Toast } from 'antd-mobile';
 import { useState } from 'react';
-import { Popup, Toast, Stepper } from 'antd-mobile';
 import { useInventoryStore } from '../../stores/inventoryStore';
 import styles from './sheets.module.css';
 
@@ -13,19 +13,27 @@ interface LotActionSheetProps {
   maxQty: number;
 }
 
-export const LotActionSheet = ({ visible, onClose, actionType, lotId, tplName, baseUnit, maxQty }: LotActionSheetProps) => {
+export const LotActionSheet = ({
+  visible,
+  onClose,
+  actionType,
+  lotId,
+  tplName,
+  baseUnit,
+  maxQty,
+}: LotActionSheetProps) => {
   const [qty, setQty] = useState(1);
   const [reason, setReason] = useState('过期异味');
   const { consumeStock, discardStock } = useInventoryStore();
 
   const isConsume = actionType === 'consume';
-  
+
   const handleConfirm = () => {
     if (qty <= 0) {
       Toast.show('请输入正确数量');
       return;
     }
-    
+
     if (isConsume) {
       consumeStock(lotId, qty);
       Toast.show({ icon: 'success', content: '消耗已记录' });
@@ -38,35 +46,55 @@ export const LotActionSheet = ({ visible, onClose, actionType, lotId, tplName, b
   };
 
   return (
-    <Popup visible={visible} onMaskClick={onClose} bodyStyle={{ borderTopLeftRadius: '24px', borderTopRightRadius: '24px', backgroundColor: '#fff' }}>
+    <Popup
+      visible={visible}
+      onMaskClick={onClose}
+      bodyStyle={{
+        borderTopLeftRadius: '24px',
+        borderTopRightRadius: '24px',
+        backgroundColor: '#fff',
+      }}
+    >
       <div className={styles.sheetWrapper}>
         <div className={styles.sheetHeader}>
-          <div className={styles.sheetTitle}>{isConsume ? '记录消耗' : '记录浪费丢弃'}</div>
-          <button onClick={onClose} style={{fontSize: 24, color: '#999'}}>×</button>
+          <div className={styles.sheetTitle}>
+            {isConsume ? '记录消耗' : '记录浪费丢弃'}
+          </div>
+          <button onClick={onClose} style={{ fontSize: 24, color: '#999' }}>
+            ×
+          </button>
         </div>
 
         <div className={styles.sheetContext}>
           <div className={styles.contextIcon}>{isConsume ? '🍽️' : '🗑️'}</div>
-          <div>正在处理：<strong>{tplName}</strong> (当前剩余 {maxQty} {baseUnit})</div>
+          <div>
+            正在处理：<strong>{tplName}</strong> (当前剩余 {maxQty} {baseUnit})
+          </div>
         </div>
 
         <div className={styles.sheetFormGroup}>
-          <div className={styles.sheetLabel}>{isConsume ? '本次消耗了多少？' : '本次扔掉了多少？'}</div>
-          <Stepper 
-            value={qty} 
-            onChange={v => setQty(v || 0)} 
-            min={1} 
+          <div className={styles.sheetLabel}>
+            {isConsume ? '本次消耗了多少？' : '本次扔掉了多少？'}
+          </div>
+          <Stepper
+            value={qty}
+            onChange={(v) => setQty(v || 0)}
+            min={1}
             max={maxQty}
-            style={{ '--input-width': '80px', '--button-font-size': '24px', '--input-font-size': '20px' }}
+            style={{
+              '--input-width': '80px',
+              '--button-font-size': '24px',
+              '--input-font-size': '20px',
+            }}
           />
         </div>
 
         {!isConsume && (
-          <div className={styles.sheetFormGroup} style={{marginTop: 12}}>
+          <div className={styles.sheetFormGroup} style={{ marginTop: 12 }}>
             <div className={styles.sheetLabel}>丢弃原因</div>
             <div className={styles.actionOptions}>
-              {['过期异味', '长毛变质', '包装破损', '口味不佳'].map(r => (
-                <div 
+              {['过期异味', '长毛变质', '包装破损', '口味不佳'].map((r) => (
+                <div
                   key={r}
                   className={`${styles.optionPill} ${reason === r ? styles.dangerActive : ''}`}
                   onClick={() => setReason(r)}
@@ -78,8 +106,8 @@ export const LotActionSheet = ({ visible, onClose, actionType, lotId, tplName, b
           </div>
         )}
 
-        <button 
-          className={`${styles.btnSolid} ${!isConsume ? styles.btnDanger : ''}`} 
+        <button
+          className={`${styles.btnSolid} ${!isConsume ? styles.btnDanger : ''}`}
           onClick={handleConfirm}
         >
           {isConsume ? '确认消耗' : '确认丢弃'}

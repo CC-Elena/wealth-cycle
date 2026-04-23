@@ -1,9 +1,9 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { eq, asc } from 'drizzle-orm';
+import { Inject, Injectable } from '@nestjs/common';
+import type { CreateCategory } from '@stock/shared';
+import { asc, eq } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { CreateCategory } from '@stock/shared';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 

@@ -1,9 +1,9 @@
-import { Injectable, Inject, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { and, eq } from 'drizzle-orm';
+import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
-import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
-import { eq, and } from 'drizzle-orm';
-import { v4 as uuidv4 } from 'uuid';
 
 const DEFAULT_USER_ID = 'default-local-user-1';
 
@@ -18,7 +18,7 @@ export class LedgerService {
   }
 
   async createLedger(userId: string, data: { name: string; icon?: string }) {
-    const id = uuidv4();
+    const id = randomUUID();
     const now = new Date();
     
     const newLedger = {
@@ -62,5 +62,41 @@ export class LedgerService {
     const ledger = this.db.select().from(schema.ledgers).where(eq(schema.ledgers.id, ledgerId)).get();
     if (!ledger) throw new NotFoundException('账本不存在');
     return ledger;
+  }
+
+  /**
+   * 跨账本调拨可支配资金 (原子操作)
+   */
+  async transferFundsBetweenLedgers(fromLedgerId: string, toLedgerId: string, amount: number) {
+    const [fromLedger, toLedger] = await Promise.all([
+      this.getLedgerById(fromLedgerId),
+      this.getLedgerById(toLedgerId),
+    ]);
+
+    if (fromLedger.disposableIncome < amount) {
+      throw new BadRequestException('来源账本可支配资金不足');
+    }
+
+    const now = new Date();
+
+    // 1. 扣除来源资金
+    this.db.update(schema.ledgers)
+      .set({ 
+        disposableIncome: (fromLedger.disposableIncome || 0) - amount,
+        updatedAt: now 
+      })
+      .where(eq(schema.ledgers.id, fromLedgerId))
+      .run();
+
+    // 2. 增加目标资金
+    this.db.update(schema.ledgers)
+      .set({ 
+        disposableIncome: (toLedger.disposableIncome || 0) + amount,
+        updatedAt: now 
+      })
+      .where(eq(schema.ledgers.id, toLedgerId))
+      .run();
+
+    return { success: true, fromLedgerId, toLedgerId, amount };
   }
 }

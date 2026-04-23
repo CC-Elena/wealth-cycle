@@ -1,7 +1,7 @@
-import { Controller, Get, Put, Body, UsePipes } from '@nestjs/common';
-import { UserService } from './user.service';
-import { User, UserProfile, UserPreferencesUpdate, UserPreferencesUpdateSchema } from '@stock/shared';
+import { Body, Controller, Get, Put, UsePipes } from '@nestjs/common';
+import { type User, type UserPreferencesUpdate, UserPreferencesUpdateSchema, type UserProfile } from '@stock/shared';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import type { UserService } from './user.service';
 
 @Controller('users')
 export class UserController {

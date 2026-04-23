@@ -1,5 +1,5 @@
-import { Controller, Get, Post, Body, Headers } from '@nestjs/common';
-import { LedgerService } from './ledger.service';
+import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import type { LedgerService } from './ledger.service';
 
 @Controller('finance/ledgers')
 export class LedgerController {

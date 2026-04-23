@@ -19,7 +19,8 @@
   color: var(--color-text-primary);
 }
 
-.closeBtn, .clearBtn {
+.closeBtn,
+.clearBtn {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
 }
@@ -129,8 +130,14 @@
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateX(-10px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .expenseText {
@@ -212,9 +219,15 @@
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .warningText {
@@ -301,4 +314,68 @@
   font-size: 11px;
   color: var(--color-accent);
   font-style: italic;
+}
+
+.proposalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+}
+
+.proposalInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.processedText {
+  text-align: center;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  padding: 8px;
+  background: var(--color-bg-alt);
+  border-radius: var(--radius-sm);
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.globalBadge {
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  color: #000;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  margin-left: 8px;
+  box-shadow: 0 2px 4px rgba(255, 215, 0, 0.3);
+}
+
+.globalStatusBar {
+  background: linear-gradient(
+    90deg,
+    rgba(108, 93, 211, 0.1),
+    rgba(255, 215, 0, 0.1)
+  );
+  padding: 4px 12px;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.globalIcon {
+  color: #ffd700;
 }

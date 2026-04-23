@@ -109,10 +109,10 @@
   color: var(--color-text-tertiary);
   padding: 4px;
   border-radius: 4px;
-  background: #F0F0F5;
+  background: #f0f0f5;
   transition: 0.1s;
 }
 
 .lotActionBtn:active {
-  background: #EAEAEF;
+  background: #eaeaef;
 }

@@ -3,7 +3,7 @@
     {
       "id": "M4-A",
       "title": "Agent 智能化核心能力 (AI-First)",
-      "status": "pending",
+      "status": "done",
       "features": [
         {
           "id": "M4-A1",
@@ -34,13 +34,19 @@
           "description": "反馈评价层：耐用品使用频率与满意度定期调查回访",
           "priority": "medium",
           "status": "done"
+        },
+        {
+          "id": "M4-A5",
+          "description": "自动化调剂实验：引入基于预测值的跨周期资金自动分配策略",
+          "priority": "high",
+          "status": "done"
         }
       ]
     },
     {
       "id": "M4-F",
       "title": "Agent 技术基座 (Agent Engineering)",
-      "status": "pending",
+      "status": "done",
       "features": [
         {
           "id": "M4-F1",
@@ -120,6 +126,21 @@
           "id": "M3-F2",
           "description": "核心分类系统：实现基础 Income/Expense 分类映射及记账 API",
           "status": "done"
+        },
+        {
+          "id": "M3-F3",
+          "description": "发薪处理流程：完整发薪重算与自动化补足逻辑",
+          "status": "done"
+        },
+        {
+          "id": "M3-F4",
+          "description": "预算引擎：预算周期结算（结转/积累）、预算目标制定",
+          "status": "done"
+        },
+        {
+          "id": "M3-F5",
+          "description": "标签体系 (Tags)：除了分类外的更轻量的维度标识",
+          "status": "done"
         }
       ]
     },
@@ -136,9 +157,36 @@
       ]
     },
     {
+      "id": "S3",
+      "title": "System Support - 系统支撑与工程化",
+      "status": "done",
+      "features": [
+        {
+          "id": "S3-F1",
+          "description": "通知系统：预算超支推送、库存预警、发薪强提醒",
+          "status": "done"
+        },
+        {
+          "id": "S3-F2",
+          "description": "数据导出：一键导出本地 SQLite 流水数据",
+          "status": "done"
+        },
+        {
+          "id": "S3-F3",
+          "description": "UI/UX 连贯性审计：统一 shadcn/ui 风格，完善移动端适配",
+          "status": "done"
+        },
+        {
+          "id": "S3-PWA",
+          "description": "PWA 离线支持与 iOS 安装引导",
+          "status": "done"
+        }
+      ]
+    },
+    {
       "id": "S4",
       "title": "数据底座与安全 (Security)",
-      "status": "pending",
+      "status": "done",
       "features": [
         {
           "id": "S4-F1",
@@ -177,6 +225,12 @@
           "description": "Agent 联动：自动扣减库存（基于记账项）、库存水位异常提醒",
           "priority": "high",
           "status": "done"
+        },
+        {
+          "id": "M6-F2",
+          "description": "浪费记录表 (WasteRecord)：记录过期和利用率低的物品",
+          "priority": "medium",
+          "status": "done"
         }
       ]
     },
@@ -186,13 +240,13 @@
       "status": "done",
       "features": [
         {
-          "id": "M6-F1",
+          "id": "M7-F1",
           "description": "安全资金池：在 UserProfile 中独立维护储蓄与应急金，并建立动用理由日志表",
           "priority": "high",
           "status": "done"
         },
         {
-          "id": "M6-A1",
+          "id": "M7-A1",
           "description": "安全感量化：Agent 自动计算“安全保障期”并在发薪日建议划拨比例",
           "priority": "high",
           "status": "done"
@@ -242,24 +296,78 @@
         },
         {
           "id": "M9-L2",
-          "description": "账本管理 UI：前端实现账本切换、创建及在 Profile 中管理账本群以及 PWA 离线支持",
+          "description": "账本 management UI：前端实现账本切换、创建及在 Profile 中管理账本群",
+          "status": "done"
+        },
+        {
+          "id": "M9-A1",
+          "description": "多账本 Agent 协同：增强 Agent 在全局模式下的跨账本洞察与资金调拨提议能力",
+          "priority": "high",
           "status": "done"
         }
       ]
     },
     {
-      "id": "Phase10-Governance",
-      "title": "Phase 10 - 环境健康与治理 (Governance & Health)",
+      "id": "S5",
+      "title": "数据同步与可靠性 (Sync & Reliability)",
       "status": "done",
       "features": [
         {
-          "id": "M10-F1",
+          "id": "S5-F1",
+          "description": "Cloud Sync Shell: 实现全量实体的通用增量同步协议与离线队列",
+          "priority": "highest",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "Phase12-FutureAI",
+      "title": "Phase 12 - 未来 AI 增强 (Future AI)",
+      "status": "pending",
+      "features": [
+        {
+          "id": "M12-A1",
+          "description": "库存相机快速录入：利用 Vision AI 识别物项名称与数量（待 API 就绪）",
+          "priority": "medium",
+          "status": "pending"
+        },
+        {
+          "id": "M12-A2",
+          "description": "外部账单静默处理 (Log Processor)：解析微信/支付宝账单文本",
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "Phase11-Governance",
+      "title": "Phase 11 - 环境健康与治理 (Governance & Health)",
+      "status": "done",
+      "features": [
+        {
+          "id": "M11-F1",
           "description": "数据库物理备份：实现加密数据库的归档与自动备份逻辑",
           "status": "done"
         },
         {
-          "id": "M10-A1",
+          "id": "M11-A1",
           "description": "Agent 财务侦调：Agent 定期执行对账自检并提议余额校准",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": "Phase10-Preorder",
+      "title": "Phase 10 - 预购评估与冲动拦截 (Wishlist)",
+      "status": "done",
+      "features": [
+        {
+          "id": "M10-F1",
+          "description": "愿望清单与冷静期机制",
+          "status": "done"
+        },
+        {
+          "id": "M10-F2",
+          "description": "预购智能评分：5因子打分模型",
           "status": "done"
         }
       ]

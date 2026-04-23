@@ -38,7 +38,11 @@ export interface BudgetBlock {
 // --- Inventory 模块重构的新实体 ---
 
 export type StorageMode = 'room_temperature' | 'refrigerated' | 'frozen';
-export type StockEventType = 'stock_in' | 'consume' | 'discard' | 'change_storage';
+export type StockEventType =
+  | 'stock_in'
+  | 'consume'
+  | 'discard'
+  | 'change_storage';
 
 export interface Station {
   id: string;
@@ -58,13 +62,13 @@ export interface InventoryItemTemplate {
 
 export interface StockLot {
   id: string;
-  itemId: string;        // 关联到模板
-  stationId: string;     // 关联到物理存放区域
+  itemId: string; // 关联到模板
+  stationId: string; // 关联到物理存放区域
   storageMode: StorageMode; // 最终该批次的实际存放方式
   initialQuantity: number;
   remainingQuantity: number;
-  purchaseDate: string;  // ISO Date
-  expireDate: string;    // ISO Date
+  purchaseDate: string; // ISO Date
+  expireDate: string; // ISO Date
   remark: string;
 }
 
@@ -74,8 +78,8 @@ export interface StockEvent {
   type: StockEventType;
   quantityChange: number; // 改变了多少数量
   previousStationId?: string; // 转移时的原区域
-  timestamp: string;      // ISO String
-  reason?: string;        // discard 等的理由
+  timestamp: string; // ISO String
+  reason?: string; // discard 等的理由
 }
 
 import type { UserProfile as SharedUserProfile } from '@stock/shared';
