@@ -1,18 +1,27 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { and, eq } from 'drizzle-orm';
 import { DB_CONNECTION } from '../../database/database.module';
-import { agentProposals, transactionItems, transactions } from '../../database/schema';
-import type { AccountService } from '../finance/account.service';
-import type { BudgetService } from '../finance/budget.service';
-import type { GovernanceService } from '../finance/governance.service';
-import type { InventoryService } from '../finance/inventory.service';
-import type { LedgerService } from '../finance/ledger.service';
-import type { PredictionService } from '../finance/prediction.service';
-import type { SavingsService } from '../finance/savings.service';
-import type { TransactionService } from '../finance/transaction.service';
-import type { WishlistService } from '../finance/wishlist.service';
-import type { UserService } from '../user/user.service';
+import {
+  agentProposals,
+  transactionItems,
+  transactions,
+} from '../../database/schema';
+import { AccountService } from '../finance/account.service';
+import { BudgetService } from '../finance/budget.service';
+import { GovernanceService } from '../finance/governance.service';
+import { InventoryService } from '../finance/inventory.service';
+import { LedgerService } from '../finance/ledger.service';
+import { PredictionService } from '../finance/prediction.service';
+import { SavingsService } from '../finance/savings.service';
+import { TransactionService } from '../finance/transaction.service';
+import { WishlistService } from '../finance/wishlist.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AgentProposalService {
@@ -30,10 +39,15 @@ export class AgentProposalService {
     private readonly predictionService: PredictionService,
   ) {}
 
-  async createProposal(userId: string, toolName: string, args: any, summary?: string) {
+  async createProposal(
+    userId: string,
+    toolName: string,
+    args: any,
+    summary?: string,
+  ) {
     const id = randomUUID();
     const now = new Date();
-    
+
     await this.db.insert(agentProposals).values({
       id,
       userId,
@@ -56,8 +70,8 @@ export class AgentProposalService {
         and(
           eq(agentProposals.userId, userId),
           eq(agentProposals.ledgerId, ledgerId),
-          eq(agentProposals.status, 'pending')
-        )
+          eq(agentProposals.status, 'pending'),
+        ),
       )
       .orderBy(agentProposals.createdAt);
   }
@@ -70,8 +84,8 @@ export class AgentProposalService {
         and(
           eq(agentProposals.userId, userId),
           eq(agentProposals.id, proposalId),
-          eq(agentProposals.status, 'pending')
-        )
+          eq(agentProposals.status, 'pending'),
+        ),
       );
 
     if (!proposal) {
@@ -92,19 +106,40 @@ export class AgentProposalService {
         });
       } else if (proposal.toolName === 'reallocate_budget') {
         const args = proposal.arguments as any;
-        await this.predictionService.transferFunds(userId, args.ledgerId, args.fromBudgetId, args.toBudgetId, args.amount, args.reason);
+        await this.predictionService.transferFunds(
+          userId,
+          args.ledgerId,
+          args.fromBudgetId,
+          args.toBudgetId,
+          args.amount,
+          args.reason,
+        );
       } else if (proposal.toolName === 'consume_item') {
         const args = proposal.arguments as any;
         await this.inventoryService.consume(args.itemId, args.quantity);
       } else if (proposal.toolName === 'transfer_to_savings') {
         const args = proposal.arguments as any;
-        await this.userService.updatePreferences(args); // 修正：现在由 UserService 处理
+        await this.savingsService.transferTo(
+          userId,
+          args.ledgerId,
+          args.amount,
+          args.category,
+        );
       } else if (proposal.toolName === 'withdraw_emergency_fund') {
         const args = proposal.arguments as any;
-        await this.userService.updatePreferences(args); 
+        await this.savingsService.withdrawEmergency(
+          userId,
+          args.ledgerId,
+          args.amount,
+          args.reason,
+        );
       } else if (proposal.toolName === 'transfer_funds') {
         const args = proposal.arguments as any;
-        await this.accountService.transfer(args.fromAccountId, args.toAccountId, args.amount);
+        await this.accountService.transfer(
+          args.fromAccountId,
+          args.toAccountId,
+          args.amount,
+        );
       } else if (proposal.toolName === 'add_to_wishlist') {
         const args = proposal.arguments as any;
         await this.wishlistService.createWishlistItem({
@@ -117,7 +152,9 @@ export class AgentProposalService {
         });
       } else if (proposal.toolName === 'perform_health_check') {
         const args = proposal.arguments as any;
-        const report = await this.governanceService.getSystemHealthReport(args.ledgerId);
+        const report = await this.governanceService.getSystemHealthReport(
+          args.ledgerId,
+        );
         if (report.isHealthy) {
           // Healthy
         }
@@ -126,7 +163,11 @@ export class AgentProposalService {
         await this.governanceService.reconcileBalances(args.ledgerId);
       } else if (proposal.toolName === 'transfer_between_ledgers') {
         const args = proposal.arguments as any;
-        await this.ledgerService.transferFundsBetweenLedgers(args.fromLedgerId, args.toLedgerId, args.amount);
+        await this.ledgerService.transferFundsBetweenLedgers(
+          args.fromLedgerId,
+          args.toLedgerId,
+          args.amount,
+        );
       } else {
         throw new BadRequestException(`不支持执行工具: ${proposal.toolName}`);
       }
@@ -139,7 +180,7 @@ export class AgentProposalService {
 
       return { success: true };
     } catch (error) {
-      throw new BadRequestException(`执行提议失败: ${error.message}`);
+      throw new BadRequestException(`执行提议失败: ${(error as Error).message}`);
     }
   }
 
@@ -150,8 +191,8 @@ export class AgentProposalService {
       .where(
         and(
           eq(agentProposals.userId, userId),
-          eq(agentProposals.id, proposalId)
-        )
+          eq(agentProposals.id, proposalId),
+        ),
       );
     return { success: true };
   }

@@ -89,6 +89,7 @@ export const categories = sqliteTable('categories', {
   icon: text('icon').default('📁').notNull(),
   isSystem: integer('is_system', { mode: 'boolean' }).default(false).notNull(),
   isActive: integer('is_active', { mode: 'boolean' }).default(true).notNull(),
+  color: text('color'),
   sortOrder: integer('sort_order').default(0).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),

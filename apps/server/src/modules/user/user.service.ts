@@ -1,5 +1,5 @@
 import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
-import type { User, UserPreferencesUpdate, UserProfile } from '@stock/shared';
+import type { Ledger, User, UserPreferencesUpdate, UserProfile } from '@stock/shared';
 import { eq } from 'drizzle-orm';
 import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
@@ -26,7 +26,8 @@ const SYSTEM_CATEGORIES = [
 @Injectable()
 export class UserService implements OnModuleInit {
   constructor(
-    @Inject(DB_CONNECTION) private readonly db: BetterSQLite3Database<typeof schema>,
+    @Inject(DB_CONNECTION)
+    private readonly db: BetterSQLite3Database<typeof schema>,
   ) {}
 
   async onModuleInit() {
@@ -36,68 +37,93 @@ export class UserService implements OnModuleInit {
   }
 
   private async ensureDefaultUser() {
-    const existing = this.db.select().from(schema.users).where(eq(schema.users.id, DEFAULT_USER_ID)).get();
-    
+    const existing = this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, DEFAULT_USER_ID))
+      .get();
+
     if (!existing) {
       const now = new Date();
-      this.db.insert(schema.users).values({
-        id: DEFAULT_USER_ID,
-        email: 'local@stock.app',
-        createdAt: now,
-        updatedAt: now,
-      }).run();
-      
-      this.db.insert(schema.userProfiles).values({
-        userId: DEFAULT_USER_ID,
-        avatarUrl: 'https://api.dicebear.com/7.x/notionists/svg?seed=Stock',
-        createdAt: now,
-        updatedAt: now,
-      }).run();
+      this.db
+        .insert(schema.users)
+        .values({
+          id: DEFAULT_USER_ID,
+          email: 'local@stock.app',
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+
+      this.db
+        .insert(schema.userProfiles)
+        .values({
+          userId: DEFAULT_USER_ID,
+          avatarUrl: 'https://api.dicebear.com/7.x/notionists/svg?seed=Stock',
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
     }
   }
 
   private async ensureDefaultLedger() {
     const userId = DEFAULT_USER_ID;
     const now = new Date();
-    
+
     // 检查是否已有账本
-    const existingLedger = this.db.select().from(schema.ledgers).where(eq(schema.ledgers.userId, userId)).get();
-    
+    const existingLedger = this.db
+      .select()
+      .from(schema.ledgers)
+      .where(eq(schema.ledgers.userId, userId))
+      .get();
+
     if (!existingLedger) {
       const ledgerId = 'default-ledger-1';
-      this.db.insert(schema.ledgers).values({
-        id: ledgerId,
-        userId,
-        name: '我的账本',
-        icon: '📗',
-        isDefault: true,
-        payday: 15,
-        budgetMode: 'carry_over',
-        disposableIncome: 0,
-        savingsAmount: 0,
-        emergencyFundAmount: 0,
-        emergencyFundGoal: 10000,
-        emergencyFundEnabled: true,
-        createdAt: now,
-        updatedAt: now,
-      }).run();
+      this.db
+        .insert(schema.ledgers)
+        .values({
+          id: ledgerId,
+          userId,
+          name: '我的账本',
+          icon: '📗',
+          isDefault: true,
+          payday: 15,
+          budgetMode: 'carry_over',
+          disposableIncome: 0,
+          savingsAmount: 0,
+          emergencyFundAmount: 0,
+          emergencyFundGoal: 10000,
+          emergencyFundEnabled: true,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
 
       // 更新 Profile 关联
-      this.db.update(schema.userProfiles)
+      this.db
+        .update(schema.userProfiles)
         .set({ defaultLedgerId: ledgerId, updatedAt: now })
         .where(eq(schema.userProfiles.userId, userId))
         .run();
 
       // 关键迁移：将所有存量数据的 ledgerId 设置为该默认账本
       const tablesToUpdate = [
-        schema.accounts, schema.categories, schema.transactions, 
-        schema.budgetPlans, schema.fixedBills, schema.inventoryItems, 
-        schema.wishlistItems, schema.savingsLogs, schema.agentProposals
+        schema.accounts,
+        schema.categories,
+        schema.transactions,
+        schema.budgetPlans,
+        schema.fixedBills,
+        schema.inventoryItems,
+        schema.wishlistItems,
+        schema.savingsLogs,
+        schema.agentProposals,
       ];
 
       for (const table of tablesToUpdate) {
         // Drizzle specific update to set ledgerId where it's null
-        this.db.update(table as any)
+        this.db
+          .update(table as any)
           .set({ ledgerId })
           .run();
       }
@@ -107,36 +133,57 @@ export class UserService implements OnModuleInit {
   private async ensureSystemCategories() {
     const now = new Date();
     for (const cat of SYSTEM_CATEGORIES) {
-      const existing = this.db.select().from(schema.categories).where(eq(schema.categories.id, cat.id)).get();
+      const existing = this.db
+        .select()
+        .from(schema.categories)
+        .where(eq(schema.categories.id, cat.id))
+        .get();
       if (!existing) {
-        this.db.insert(schema.categories).values({
-          id: cat.id,
-          userId: DEFAULT_USER_ID,
-          name: cat.name,
-          parentId: null,
-          type: 'expense',
-          icon: cat.icon,
-          isSystem: true,
-          isActive: true,
-          sortOrder: cat.sortOrder,
-          createdAt: now,
-          updatedAt: now,
-        }).run();
+        this.db
+          .insert(schema.categories)
+          .values({
+            id: cat.id,
+            userId: DEFAULT_USER_ID,
+            name: cat.name,
+            parentId: null,
+            type: 'expense',
+            icon: cat.icon,
+            isSystem: true,
+            isActive: true,
+            sortOrder: cat.sortOrder,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .run();
       }
     }
   }
 
   getMyProfile(): { user: User; profile: UserProfile; ledgers: Ledger[] } {
-    const user = this.db.select().from(schema.users).where(eq(schema.users.id, DEFAULT_USER_ID)).get();
-    const profile = this.db.select().from(schema.userProfiles).where(eq(schema.userProfiles.userId, DEFAULT_USER_ID)).get();
-    const ledgers = this.db.select().from(schema.ledgers).where(eq(schema.ledgers.userId, DEFAULT_USER_ID)).all();
-    
+    const user = this.db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.id, DEFAULT_USER_ID))
+      .get();
+    const profile = this.db
+      .select()
+      .from(schema.userProfiles)
+      .where(eq(schema.userProfiles.userId, DEFAULT_USER_ID))
+      .get();
+    const ledgers = this.db
+      .select()
+      .from(schema.ledgers)
+      .where(eq(schema.ledgers.userId, DEFAULT_USER_ID))
+      .all();
+
     if (!user || !profile) {
       throw new Error('Default user not initialized');
     }
 
     // 获取当前关联的账本数据
-    const ledger = this.db.select().from(schema.ledgers)
+    const ledger = this.db
+      .select()
+      .from(schema.ledgers)
       .where(eq(schema.ledgers.id, profile.defaultLedgerId || ''))
       .get();
 
@@ -164,18 +211,23 @@ export class UserService implements OnModuleInit {
         createdAt: profile.createdAt,
         updatedAt: profile.updatedAt,
       },
-      ledgers: ledgers as Ledger[]
+      ledgers: ledgers as Ledger[],
     };
   }
 
   updatePreferences(data: UserPreferencesUpdate): UserProfile {
     const now = new Date();
     // better-sqlite3 with drizzle-orm is sync.
-    const profileRec = this.db.select().from(schema.userProfiles).where(eq(schema.userProfiles.userId, DEFAULT_USER_ID)).get();
-    
+    const profileRec = this.db
+      .select()
+      .from(schema.userProfiles)
+      .where(eq(schema.userProfiles.userId, DEFAULT_USER_ID))
+      .get();
+
     // 更新 Profile 基础字段（如头像）
     if (data.avatarUrl) {
-      this.db.update(schema.userProfiles)
+      this.db
+        .update(schema.userProfiles)
         .set({ avatarUrl: data.avatarUrl, updatedAt: now })
         .where(eq(schema.userProfiles.userId, DEFAULT_USER_ID))
         .run();
@@ -183,7 +235,15 @@ export class UserService implements OnModuleInit {
 
     // 更新当前账本字段
     if (profileRec?.defaultLedgerId) {
-      const ledgerFields = ['payday', 'budgetMode', 'disposableIncome', 'savingsAmount', 'emergencyFundAmount', 'emergencyFundGoal', 'emergencyFundEnabled'];
+      const ledgerFields = [
+        'payday',
+        'budgetMode',
+        'disposableIncome',
+        'savingsAmount',
+        'emergencyFundAmount',
+        'emergencyFundGoal',
+        'emergencyFundEnabled',
+      ];
       const ledgerUpdate: any = {};
       for (const field of ledgerFields) {
         if (field in data) {
@@ -192,7 +252,8 @@ export class UserService implements OnModuleInit {
       }
 
       if (Object.keys(ledgerUpdate).length > 0) {
-        this.db.update(schema.ledgers)
+        this.db
+          .update(schema.ledgers)
           .set({ ...ledgerUpdate, updatedAt: now })
           .where(eq(schema.ledgers.id, profileRec.defaultLedgerId))
           .run();

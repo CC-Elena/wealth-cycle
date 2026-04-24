@@ -35,7 +35,10 @@ export class SyncService {
         timestamp: new Date(),
       });
     } catch (error) {
-      this.logger.error(`Failed to log sync change for ${change.entityType}`, error);
+      this.logger.error(
+        `Failed to log sync change for ${change.entityType}`,
+        error,
+      );
     }
   }
 
@@ -43,8 +46,10 @@ export class SyncService {
    * 批量推送客户端变更并应用到数据库
    */
   async pushChanges(userId: string, changes: SyncChange[]) {
-    this.logger.log(`Processing ${changes.length} synced changes from user ${userId}`);
-    
+    this.logger.log(
+      `Processing ${changes.length} synced changes from user ${userId}`,
+    );
+
     const results = [];
     for (const change of changes) {
       try {
@@ -63,8 +68,15 @@ export class SyncService {
         });
         results.push({ entityId: change.entityId, status: 'success' });
       } catch (error) {
-        this.logger.error(`Failed to apply/log change for ${change.entityId}`, error);
-        results.push({ entityId: change.entityId, status: 'failed', error: error.message });
+        this.logger.error(
+          `Failed to apply/log change for ${change.entityId}`,
+          error,
+        );
+        results.push({
+          entityId: change.entityId,
+          status: 'failed',
+          error: (error as Error).message,
+        });
       }
     }
     return results;
@@ -72,14 +84,14 @@ export class SyncService {
 
   private async applyChange(userId: string, change: SyncChange) {
     const { entityType, entityId, operation, changes, ledgerId } = change;
-    
+
     // 映射实体类型到具体的表名
     const tableMap: Record<string, any> = {
-      'transaction': schema.transactions,
-      'budget': schema.budgetPlans,
-      'fixed_bill': schema.fixedBills,
-      'wishlist': schema.wishlistItems,
-      'account': schema.accounts,
+      transaction: schema.transactions,
+      budget: schema.budgetPlans,
+      fixed_bill: schema.fixedBills,
+      wishlist: schema.wishlistItems,
+      account: schema.accounts,
     };
 
     const table = tableMap[entityType];
@@ -88,23 +100,28 @@ export class SyncService {
     }
 
     if (operation === 'create') {
-      await this.db.insert(table).values({
-        ...changes,
-        id: entityId,
-        userId,
-        ledgerId: ledgerId || changes.ledgerId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }).onConflictDoUpdate({
-        target: table.id,
-        set: { ...changes, updatedAt: new Date() }
-      });
+      await this.db
+        .insert(table)
+        .values({
+          ...changes,
+          id: entityId,
+          userId,
+          ledgerId: ledgerId || changes.ledgerId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: table.id,
+          set: { ...changes, updatedAt: new Date() },
+        });
     } else if (operation === 'update') {
-      await this.db.update(table)
+      await this.db
+        .update(table)
         .set({ ...changes, updatedAt: new Date() })
         .where(and(eq(table.id, entityId), eq(table.userId, userId)));
     } else if (operation === 'delete') {
-      await this.db.delete(table)
+      await this.db
+        .delete(table)
         .where(and(eq(table.id, entityId), eq(table.userId, userId)));
     }
   }
@@ -114,19 +131,14 @@ export class SyncService {
    */
   async pullChanges(userId: string, lastSyncTime?: string) {
     const since = lastSyncTime ? new Date(lastSyncTime) : new Date(0);
-    
+
     const logs = await this.db
       .select()
       .from(syncLogs)
-      .where(
-        and(
-          eq(syncLogs.userId, userId),
-          gt(syncLogs.timestamp, since)
-        )
-      )
+      .where(and(eq(syncLogs.userId, userId), gt(syncLogs.timestamp, since)))
       .orderBy(asc(syncLogs.timestamp));
 
-    return logs.map(log => ({
+    return logs.map((log: any) => ({
       entityType: log.entityType,
       entityId: log.entityId,
       operation: log.operation,

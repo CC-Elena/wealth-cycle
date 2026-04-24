@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { and, eq, gt, isNull, lt, sql } from 'drizzle-orm';
-import type { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
+import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import { DB_CONNECTION } from '../../database/database.module';
 import * as schema from '../../database/schema';
 
@@ -10,7 +10,8 @@ export class ReviewService {
   private readonly logger = new Logger(ReviewService.name);
 
   constructor(
-    @Inject(DB_CONNECTION) private readonly db: BetterSQLite3Database<typeof schema>,
+    @Inject(DB_CONNECTION)
+    private readonly db: BetterSQLite3Database<typeof schema>,
   ) {}
 
   /**
@@ -28,16 +29,22 @@ export class ReviewService {
         date: schema.transactions.date,
       })
       .from(schema.transactionItems)
-      .innerJoin(schema.transactions, eq(schema.transactionItems.transactionId, schema.transactions.id))
-      .leftJoin(schema.reviewTasks, eq(schema.transactionItems.id, schema.reviewTasks.transactionItemId))
+      .innerJoin(
+        schema.transactions,
+        eq(schema.transactionItems.transactionId, schema.transactions.id),
+      )
+      .leftJoin(
+        schema.reviewTasks,
+        eq(schema.transactionItems.id, schema.reviewTasks.transactionItemId),
+      )
       .where(
         and(
           eq(schema.transactions.userId, userId),
           eq(schema.transactions.ledgerId, ledgerId),
           eq(schema.transactionItems.isConsumable, false),
           lt(schema.transactions.date, sevenDaysAgo),
-          isNull(schema.reviewTasks.id)
-        )
+          isNull(schema.reviewTasks.id),
+        ),
       );
 
     for (const item of items) {
@@ -59,7 +66,7 @@ export class ReviewService {
   async getPendingTasks(userId: string, ledgerId?: string) {
     const filters = [
       eq(schema.reviewTasks.userId, userId),
-      eq(schema.reviewTasks.status, 'pending')
+      eq(schema.reviewTasks.status, 'pending'),
     ];
 
     if (ledgerId && ledgerId !== 'global') {
@@ -73,12 +80,23 @@ export class ReviewService {
         purchaseDate: schema.transactions.date,
       })
       .from(schema.reviewTasks)
-      .innerJoin(schema.transactionItems, eq(schema.reviewTasks.transactionItemId, schema.transactionItems.id))
-      .innerJoin(schema.transactions, eq(schema.transactionItems.transactionId, schema.transactions.id))
+      .innerJoin(
+        schema.transactionItems,
+        eq(schema.reviewTasks.transactionItemId, schema.transactionItems.id),
+      )
+      .innerJoin(
+        schema.transactions,
+        eq(schema.transactionItems.transactionId, schema.transactions.id),
+      )
       .where(and(...filters));
   }
 
-  async submitReview(taskId: string, rating: number, usageFrequency: string, comment?: string) {
+  async submitReview(
+    taskId: string,
+    rating: number,
+    usageFrequency: string,
+    comment?: string,
+  ) {
     await this.db.transaction(async (tx) => {
       await tx.insert(schema.reviewResults).values({
         id: randomUUID(),

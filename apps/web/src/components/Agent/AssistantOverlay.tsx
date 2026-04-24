@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Badge } from 'antd-mobile';
 import { Globe, MessageCircle } from 'lucide-react';
 import { useFinanceStore } from '../../stores/financeStore';

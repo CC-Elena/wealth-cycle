@@ -2,6 +2,7 @@
   "name": "@stock/shared",
   "version": "1.0.0",
   "main": "dist/index.js",
+  "type": "module",
   "types": "dist/index.d.ts",
   "dependencies": {
     "zod": "^3.23.8"

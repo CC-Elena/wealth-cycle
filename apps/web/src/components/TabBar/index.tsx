@@ -1,12 +1,22 @@
+import {
+  BarChart3,
+  LayoutDashboard,
+  Package,
+  ReceiptText,
+  UserRound,
+} from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './index.module.css';
 
+const ICON_SIZE = 22;
+const ICON_STROKE = 1.8;
+
 const tabs = [
-  { key: '/', label: '控制台', icon: '🏠' },
-  { key: '/analysis', label: '分析', icon: '📈' },
-  { key: '/transactions', label: '流水', icon: '📝' },
-  { key: '/inventory', label: '库存', icon: '📦' },
-  { key: '/profile', label: '我的', icon: '👤' },
+  { key: '/', label: '控制台', Icon: LayoutDashboard },
+  { key: '/analysis', label: '分析', Icon: BarChart3 },
+  { key: '/transactions', label: '流水', Icon: ReceiptText },
+  { key: '/inventory', label: '库存', Icon: Package },
+  { key: '/profile', label: '我的', Icon: UserRound },
 ];
 
 const TabBar = () => {
@@ -24,7 +34,12 @@ const TabBar = () => {
             className={`${styles.tab} ${isActive ? styles.active : ''}`}
             onClick={() => navigate(tab.key)}
           >
-            <span className={styles.icon}>{tab.icon}</span>
+            <span className={styles.icon}>
+              <tab.Icon
+                size={ICON_SIZE}
+                strokeWidth={isActive ? 2.2 : ICON_STROKE}
+              />
+            </span>
             <span className={styles.label}>{tab.label}</span>
           </button>
         );

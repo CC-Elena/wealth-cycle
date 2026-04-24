@@ -47,6 +47,7 @@ export const CreatePayrollEventSchema = z.object({
   ledgerId: z.string().optional(),
   fixedBillIds: z.array(z.string()).optional(), // 本次发薪考虑的账单
   budgetReplenishment: z.record(z.number()).optional(), // 各个预算池的补足额度 {budgetId: amount}
+  accountId: z.string().optional(),
 });
 
 export type PayrollEvent = z.infer<typeof PayrollEventSchema>;

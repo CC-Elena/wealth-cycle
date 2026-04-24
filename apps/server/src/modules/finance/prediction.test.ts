@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 /**
  * 模拟预测算法逻辑
  */
-function predict(spent, daysElapsed, totalDays) {
+function predict(spent: any, daysElapsed: any, totalDays: any) {
   const dailyRate = spent / daysElapsed;
   const predictedEnd = dailyRate * totalDays;
   return predictedEnd;

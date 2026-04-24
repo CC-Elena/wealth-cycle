@@ -1,5 +1,15 @@
-import { Body, Controller, Get, Headers, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
-import type { NotificationService } from './notification.service';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { NotificationService } from './notification.service';
 
 @Controller('notifications')
 export class NotificationController {
@@ -12,7 +22,11 @@ export class NotificationController {
     @Query('unread') unread?: string,
   ) {
     const userId = req.user?.id || 'local-user';
-    return this.notificationService.findAll(userId, ledgerId, unread === 'true');
+    return this.notificationService.findAll(
+      userId,
+      ledgerId,
+      unread === 'true',
+    );
   }
 
   @Get('unread-count')
@@ -21,7 +35,9 @@ export class NotificationController {
     @Headers('x-ledger-id') ledgerId: string,
   ) {
     const userId = req.user?.id || 'local-user';
-    return { count: await this.notificationService.getUnreadCount(userId, ledgerId) };
+    return {
+      count: await this.notificationService.getUnreadCount(userId, ledgerId),
+    };
   }
 
   @Post(':id/read')
