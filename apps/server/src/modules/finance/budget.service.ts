@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { CreateBudgetPlan, UpdateBudgetPlan } from '@stock/shared';
 import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
@@ -109,14 +109,23 @@ export class BudgetService {
 
     // Insert categories
     if (data.categoryIds && data.categoryIds.length > 0) {
-      for (const catId of data.categoryIds) {
-        this.db
-          .insert(schema.budgetCategories)
-          .values({
-            budgetId: id,
-            categoryId: catId,
-          })
-          .run();
+      try {
+        for (const catId of data.categoryIds) {
+          this.db
+            .insert(schema.budgetCategories)
+            .values({
+              budgetId: id,
+              categoryId: catId,
+            })
+            .run();
+        }
+      } catch (err: any) {
+        if (err.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+          // 如果外键失败，必须先删除已经插入的 budget plan 以保持一致性
+          this.db.delete(schema.budgetPlans).where(eq(schema.budgetPlans.id, id)).run();
+          throw new BadRequestException('关联的分类 ID 不存在');
+        }
+        throw err;
       }
     }
 

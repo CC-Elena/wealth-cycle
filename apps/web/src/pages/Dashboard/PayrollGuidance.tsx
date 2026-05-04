@@ -10,6 +10,11 @@ interface PayrollGuidanceProps {
 
 export const PayrollGuidance = ({ visible, onClose }: PayrollGuidanceProps) => {
   const store = useFinanceStore();
+  const setUIBlocked = useFinanceStore((s) => s.setUIBlocked);
+  useEffect(() => {
+    setUIBlocked(visible);
+  }, [visible, setUIBlocked]);
+
   const [step, setStep] = useState(1);
   const [payrollAmount, setPayrollAmount] = useState(15000);
   const [preview, setPreview] = useState<any>(null);

@@ -109,7 +109,7 @@ export class PayrollService {
       .where(eq(schema.ledgers.id, ledgerId))
       .get();
     if (ledger) {
-      await this.db.transaction(async (tx) => {
+      this.db.transaction((tx) => {
         tx.update(schema.ledgers)
           .set({
             netWorth: (ledger.netWorth || 0) + data.salaryAmount,
@@ -123,8 +123,8 @@ export class PayrollService {
           .run();
 
         const accountId =
-          data.accountId || (await this.accountService.ensureDefaultAccount());
-        await this.accountService.updateBalance(
+          data.accountId || this.accountService.ensureDefaultAccount();
+        this.accountService.updateBalance(
           accountId,
           preview.disposableIncomeGenerated,
           tx,

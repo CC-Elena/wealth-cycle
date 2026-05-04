@@ -81,6 +81,14 @@ export class FinanceController {
     );
   }
 
+  @Post('accounts')
+  createAccount(
+    @Headers('x-ledger-id') ledgerId: string,
+    @Body() body: any,
+  ) {
+    return this.accountService.createAccount(body, ledgerId);
+  }
+
   @Get('health/stats')
   async getHealthStats(@Headers('x-ledger-id') ledgerId: string) {
     // 异步触发发薪提醒检查
@@ -184,7 +192,7 @@ export class FinanceController {
     );
   }
 
-  @Get('finance/stats/categories')
+  @Get('finance/stats/category-dist')
   getCategoryDistribution(
     @Headers('x-ledger-id') ledgerId: string,
     @Query('start') start?: string,

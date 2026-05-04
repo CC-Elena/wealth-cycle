@@ -1,4 +1,5 @@
 import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { CreateTransactionSchema } from '@stock/shared';
 import ky from 'ky';
 import { AccountService } from '../finance/account.service';
@@ -21,13 +22,12 @@ export class AgentService {
   private readonly logger = new Logger(AgentService.name);
 
   // 环境变量占位，实际运行时需配置
-  private readonly apiKey = process.env.ARK_API_KEY || '';
-  private readonly endpoint =
-    process.env.ARK_ENDPOINT ||
-    'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
-  private readonly modelId = process.env.ARK_MODEL_ID || 'doubao-pro-4k';
+  private get apiKey() { return this.configService.get<string>('ARK_API_KEY') || ''; }
+  private get endpoint() { return this.configService.get<string>('ARK_ENDPOINT') || 'https://ark.cn-beijing.volces.com/api/v3/chat/completions'; }
+  private get modelId() { return this.configService.get<string>('ARK_MODEL_ID') || 'doubao-pro-4k'; }
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly categoryService: CategoryService,
     private readonly transactionService: TransactionService,
     private readonly budgetService: BudgetService,
@@ -227,9 +227,30 @@ export class AgentService {
         }
 
         return response;
-      } catch (error) {
+      } catch (error: any) {
         this.logger.error('LLM Call Failed', error);
-        throw error;
+        let errorMessage = '抱歉，我现在无法处理您的请求，可能由于网络或服务不稳定。';
+        if (error.response) {
+          try {
+            const errorData = await error.response.json();
+            errorMessage += ` (详情: ${errorData?.error?.message || error.message})`;
+          } catch (e) {
+            errorMessage += ` (状态码: ${error.response.status})`;
+          }
+        } else {
+          errorMessage += ` (${error.message})`;
+        }
+        
+        return {
+          choices: [
+            {
+              message: {
+                role: 'assistant',
+                content: errorMessage,
+              },
+            },
+          ],
+        };
       }
     }
   }

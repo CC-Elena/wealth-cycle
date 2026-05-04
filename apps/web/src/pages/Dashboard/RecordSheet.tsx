@@ -1,5 +1,5 @@
 import { NumberKeyboard, Popup, Tabs, Toast } from 'antd-mobile';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFinanceStore } from '../../stores/financeStore';
 import styles from './index.module.css';
 
@@ -9,6 +9,16 @@ interface RecordSheetProps {
 }
 
 export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
+  const setUIBlocked = useFinanceStore((s) => s.setUIBlocked);
+  useEffect(() => {
+    if (!visible) {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+    setUIBlocked(visible);
+  }, [visible, setUIBlocked]);
+
   const [amount, setAmount] = useState('0');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [memo, setMemo] = useState('');
@@ -112,6 +122,11 @@ export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
   };
 
   const handleConfirm = async () => {
+    // 主动收起软键盘
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     const num = parseFloat(amount);
     if (!num || num <= 0) {
       Toast.show('请输入有效金额');
@@ -186,6 +201,10 @@ export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
         borderTopLeftRadius: '24px',
         borderTopRightRadius: '24px',
         backgroundColor: '#fff',
+        zIndex: 10001,
+      }}
+      style={{
+        '--z-index': '10000',
       }}
     >
       <div className={styles.sheetContainer}>
@@ -354,13 +373,19 @@ export const RecordSheet = ({ visible, onClose }: RecordSheetProps) => {
         )}
 
         <NumberKeyboard
-          visible={true}
+          visible={visible}
           customKey={'.'}
           confirmText="完成"
-          onClose={handleConfirm}
+          onClose={() => {
+            onClose();
+          }}
+          onConfirm={handleConfirm}
           onInput={handleInput}
           onDelete={() => handleInput('BACKSPACE')}
           className={styles.customKeyboard}
+          style={{
+            '--z-index': '20000',
+          }}
         />
       </div>
     </Popup>

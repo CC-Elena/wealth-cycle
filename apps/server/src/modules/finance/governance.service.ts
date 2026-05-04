@@ -38,9 +38,9 @@ export class GovernanceService {
     const fullPath = join(backupDir, filename);
 
     try {
-      // better-sqlite3 提供的物理备份 API
-      const sqlite = (this.db as any).$client;
-      await sqlite.backup(fullPath);
+      // 由于 SQLCipher 加密数据库使用 better-sqlite3 自带的 backup API 会报格式不兼容错误，这里直接采用物理文件复制
+      const { copyFileSync } = require('fs');
+      copyFileSync(join(process.cwd(), 'local.db'), fullPath);
       this.logger.log(`Database backed up to: ${fullPath}`);
       return { success: true, path: fullPath };
     } catch (error) {

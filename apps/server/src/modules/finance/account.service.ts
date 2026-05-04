@@ -21,7 +21,10 @@ export class AccountService {
   /**
    * 初始化默认账户 (用于数据迁移)
    */
-  async ensureDefaultAccount() {
+  ensureDefaultAccount() {
+    // 默认账本ID通常为 default-ledger-1，这里尝试获取
+    const defaultLedgerId = 'default-ledger-1';
+
     const existing = this.db
       .select()
       .from(schema.accounts)
@@ -41,6 +44,7 @@ export class AccountService {
         .values({
           id: 'acc-default',
           userId: DEFAULT_USER_ID,
+          ledgerId: defaultLedgerId, // 补充 ledgerId
           name: '我的钱包',
           type: 'cash',
           balance: 0,
@@ -52,6 +56,26 @@ export class AccountService {
       return 'acc-default';
     }
     return existing.id;
+  }
+
+  createAccount(data: any, ledgerId: string) {
+    const now = new Date();
+    const id = `acc-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
+    this.db
+      .insert(schema.accounts)
+      .values({
+        id,
+        userId: DEFAULT_USER_ID,
+        ledgerId: data.ledgerId || ledgerId || 'default-ledger-1',
+        name: data.name,
+        type: data.type || 'cash',
+        balance: data.balance || 0,
+        isDefault: data.isDefault || false,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .run();
+    return this.getAccountById(id);
   }
 
   getAccounts(ledgerId?: string) {
@@ -81,7 +105,7 @@ export class AccountService {
   /**
    * 原子化更新余额
    */
-  async updateBalance(accountId: string, amount: number, txHost?: any) {
+  updateBalance(accountId: string, amount: number, txHost?: any) {
     const db = txHost || this.db;
     const now = new Date();
 
@@ -102,19 +126,19 @@ export class AccountService {
   /**
    * 内部转账
    */
-  async transfer(fromId: string, toId: string, amount: number) {
+  transfer(fromId: string, toId: string, amount: number) {
     if (amount <= 0) throw new BadRequestException('转账金额必须大于0');
 
-    return this.db.transaction(async (tx) => {
-      const fromAccount = await this.getAccountById(fromId);
-      const toAccount = await this.getAccountById(toId);
+    return this.db.transaction((tx) => {
+      const fromAccount = this.getAccountById(fromId);
+      const toAccount = this.getAccountById(toId);
 
       if (fromAccount.ledgerId !== toAccount.ledgerId) {
         throw new BadRequestException('目前不支持跨账本转账');
       }
 
-      await this.updateBalance(fromId, -amount, tx);
-      await this.updateBalance(toId, amount, tx);
+      this.updateBalance(fromId, -amount, tx);
+      this.updateBalance(toId, amount, tx);
 
       const now = new Date();
       const ledgerId = fromAccount.ledgerId;

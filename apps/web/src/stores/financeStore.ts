@@ -160,6 +160,7 @@ interface FinanceState {
   lastSyncTime: string | null;
   predictions: PredictionStat[];
   inventoryItems: any[]; // 暂定 any，后续可细化
+  isUIBlocked: boolean;
 
   // --- 核心计算值 ---
   disposableIncome: number;
@@ -248,6 +249,7 @@ interface FinanceState {
   getLedgerHeader: () => Record<string, string>;
   exportData: () => Promise<void>;
   fetchInventoryItems: () => Promise<void>;
+  setUIBlocked: (blocked: boolean) => void;
   recordWasteOnServer: (data: {
     itemId: string;
     quantity: number;
@@ -337,6 +339,9 @@ export const useFinanceStore = create<FinanceState>()(
       lastSyncTime: null,
       predictions: [],
       inventoryItems: [],
+      isUIBlocked: false,
+
+      setUIBlocked: (blocked) => set({ isUIBlocked: blocked }),
 
       addTransaction: (tx) => {
         set((state) => {

@@ -43,11 +43,11 @@ export class TransactionService {
     const id = `tx-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
     const transactionDate = data.date ? new Date(data.date) : now;
 
-    return this.db.transaction(async (tx) => {
+    return this.db.transaction((tx) => {
       // 1. 确定来源账户及其归属账本
       const accountId =
-        data.accountId || (await this.accountService.ensureDefaultAccount());
-      const account = await this.accountService.getAccountById(accountId);
+        data.accountId || this.accountService.ensureDefaultAccount();
+      const account = this.accountService.getAccountById(accountId);
 
       // 优先使用传入的 ledgerId，否则取账户关联的 ledgerId
       const ledgerId = data.ledgerId || account?.ledgerId;
@@ -75,7 +75,7 @@ export class TransactionService {
 
       // 更新账户余额
       const balanceChange = data.type === 'income' ? data.amount : -data.amount;
-      await this.accountService.updateBalance(accountId, balanceChange, tx);
+      this.accountService.updateBalance(accountId, balanceChange, tx);
 
       // Handle items if provided...
 
@@ -210,14 +210,14 @@ export class TransactionService {
 
     const trend = this.db
       .select({
-        month: sql<string>`strftime('%Y-%m', date / 1000, 'unixepoch')`,
+        month: sql<string>`strftime('%Y-%m', ${schema.transactions.date}, 'unixepoch')`,
         type: schema.transactions.type,
         total: sql<number>`sum(${schema.transactions.amount})`,
       })
       .from(schema.transactions)
       .where(and(...filters))
-      .groupBy(sql`month`, schema.transactions.type)
-      .orderBy(sql`month`)
+      .groupBy(sql`strftime('%Y-%m', ${schema.transactions.date}, 'unixepoch')`, schema.transactions.type)
+      .orderBy(sql`strftime('%Y-%m', ${schema.transactions.date}, 'unixepoch')`)
       .all();
 
     return trend;
@@ -247,9 +247,9 @@ export class TransactionService {
     const query = this.db
       .select({
         categoryId: schema.transactions.categoryId,
-        categoryName: schema.categories.name,
-        categoryColor: schema.categories.color,
-        categoryIcon: schema.categories.icon,
+        name: schema.categories.name,
+        color: schema.categories.color,
+        icon: schema.categories.icon,
         total: sql<number>`sum(${schema.transactions.amount})`,
       })
       .from(schema.transactions)
@@ -258,8 +258,13 @@ export class TransactionService {
         eq(schema.transactions.categoryId, schema.categories.id),
       )
       .where(and(...filters))
-      .groupBy(schema.transactions.categoryId)
-      .orderBy(sql`total desc`)
+      .groupBy(
+        schema.transactions.categoryId,
+        schema.categories.name,
+        schema.categories.color,
+        schema.categories.icon,
+      )
+      .orderBy(sql`total DESC`)
       .all();
 
     return query;

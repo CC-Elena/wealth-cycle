@@ -29,6 +29,7 @@ const Dashboard = () => {
 
   // 组装给 ECharts 的数据集
   const chartData = store.budgets.map((b) => ({
+    id: b.id,
     name: b.name,
     value: b.spentAmount,
     color: b.color,
@@ -201,7 +202,7 @@ const Dashboard = () => {
           )}
           <div className={styles.progressBars}>
             {chartData.map((d) => (
-              <div className={styles.progressItem} key={d.name}>
+              <div className={styles.progressItem} key={d.id}>
                 <div className={styles.progressLabel}>
                   {d.name}
                   {store.predictions.find(
