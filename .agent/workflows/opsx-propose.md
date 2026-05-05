@@ -9,6 +9,8 @@ I'll create a change with artifacts:
 - design.md (how)
 - tasks.md (implementation steps)
 
+For Medium, Large, or Risky changes, include a Context Pack in the proposal or design using `docs/harness/ai-workflow/context-pack-template.md`. Keep Small changes lightweight and avoid unnecessary workflow artifacts.
+
 When ready to implement, run /opsx:apply
 
 ---
@@ -62,6 +64,7 @@ When ready to implement, run /opsx:apply
       - Create the artifact file using `template` as the structure
       - Apply `context` and `rules` as constraints - but do NOT copy them into the file
       - Show brief progress: "Created <artifact-id>"
+      - If the change touches multiple modules, `packages/shared`, database schema, Agent logic, or core financial flows, record the task complexity and required P0/P1 context.
 
    b. **Continue until all `applyRequires` artifacts are complete**
       - After creating each artifact, re-run `openspec status --change "<name>" --json`
