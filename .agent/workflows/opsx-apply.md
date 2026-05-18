@@ -4,6 +4,8 @@ description: Implement tasks from an OpenSpec change (Experimental)
 
 Implement tasks from an OpenSpec change.
 
+Before implementation, use `docs/harness/ai-workflow/rule-loading-policy.md` to classify the task and `docs/harness/ai-workflow/skill-routing-minimal.md` to choose exactly 1 primary Skill and at most 1 supporting Skill. Do not load unrelated Skills.
+
 **Input**: Optionally specify a change name (e.g., `/opsx:apply add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
 **Steps**
@@ -56,15 +58,19 @@ Implement tasks from an OpenSpec change.
    - Progress: "N/M tasks complete"
    - Remaining tasks overview
    - Dynamic instruction from CLI
+   - Task complexity: Small / Medium / Large / Risky / Failure
+   - Primary Skill and optional supporting Skill
+   - Required verification command, usually `pnpm agent:check`
 
 6. **Implement tasks (loop until done or blocked)**
 
-   For each pending task:
+  For each pending task:
    - Show which task is being worked on
    - Make the code changes required
    - Keep changes minimal and focused
    - Mark task complete in the tasks file: `- [ ]` → `- [x]`
    - Continue to next task
+   - If implementation expands beyond the current Context Pack, pause and add only the missing P0/P1 context before continuing
 
    **Pause if:**
    - Task is unclear → ask for clarification
@@ -110,6 +116,8 @@ Working on task 4/7: <task description>
 
 All tasks complete! You can archive this change with `/opsx:archive`.
 ```
+
+Also create or update a Run Record from `docs/harness/ai-workflow/run-record-template.md` when code changed. If `pnpm agent:check` was skipped, record the reason and risk.
 
 **Output On Pause (Issue Encountered)**
 

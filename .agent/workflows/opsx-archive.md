@@ -4,6 +4,8 @@ description: Archive a completed change in the experimental workflow
 
 Archive a completed change in the experimental workflow.
 
+Before archiving code-changing work, ensure there is a Run Record using `docs/harness/ai-workflow/run-record-template.md`. If validation failed, the AI output was substantially rewritten, or Review found a systemic issue, create an RCA using `docs/harness/ai-workflow/rca-template.md`.
+
 **Input**: Optionally specify a change name after `/opsx:archive` (e.g., `/opsx:archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
 **Steps**
@@ -83,6 +85,8 @@ Archive a completed change in the experimental workflow.
    - Archive location
    - Spec sync status (synced / sync skipped / no delta specs)
    - Note about any warnings (incomplete artifacts/tasks)
+   - Run Record status
+   - RCA status if triggered
 
 **Output On Success**
 

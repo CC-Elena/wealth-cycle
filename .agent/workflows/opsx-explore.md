@@ -6,6 +6,8 @@ Enter explore mode. Think deeply. Visualize freely. Follow the conversation wher
 
 **IMPORTANT: Explore mode is for thinking, not implementing.** You may read files, search code, and investigate the codebase, but you must NEVER write code or implement features. If the user asks you to implement something, remind them to exit explore mode first and create a change proposal. You MAY create OpenSpec artifacts (proposals, designs, specs) if the user asks—that's capturing thinking, not implementing.
 
+**Lightweight rule loading:** Explore mode should stay cheap. Read `docs/harness/ai-workflow/rule-loading-policy.md` and `docs/harness/ai-workflow/skill-routing-minimal.md` only when rule or Skill choice matters. Do not load evaluation, production gate, or RCA templates during normal exploration.
+
 **This is a stance, not a workflow.** There are no fixed steps, no required sequence, no mandatory outputs. You're a thinking partner helping the user explore.
 
 **Input**: The argument after `/opsx:explore` is whatever the user wants to think about. Could be:
@@ -43,6 +45,7 @@ Depending on what the user brings, you might:
 - Find integration points
 - Identify patterns already in use
 - Surface hidden complexity
+- For Medium or larger ideas, sketch a Context Pack using `docs/harness/ai-workflow/context-pack-template.md`
 
 **Compare options**
 - Brainstorm multiple approaches
