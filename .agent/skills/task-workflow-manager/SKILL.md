@@ -21,8 +21,9 @@ version: 2.0.0
 ## 2. 操作流程 (SOP)
 
 ### 会话开始 (Session Start)
-1. **确认全局状态**：读取 `docs/harness/claude-progress.txt`，重点关注 `Active` 区域，检查是否有正在进行的任务或未归档的 OpenSpec 变更。
-2. **定位里程碑**：查阅 `docs/harness/feature-list.json`，了解当前及后续的任务方向。若有中断的 `in_progress` 任务，优先接手。
+1. **环境与状态自检**：运行 `pnpm agent:bootstrap` 与 `pnpm agent:status`，确认基础工具可用，并检查 Harness / OpenSpec 是否一致。
+2. **确认全局状态**：读取 `docs/harness/claude-progress.txt`，重点关注 `Active` 区域，检查是否有正在进行的任务或未归档的 OpenSpec 变更。
+3. **定位里程碑**：查阅 `docs/harness/feature-list.json`，了解当前及后续的任务方向。若有中断的 `in_progress` 任务，优先接手。
 
 ### 任务启动 (Implementation Start)
 1. **显式关联 Feature ID**：任何变更（包含 UI Gap 修复或 Bugfix）必须关联至少一个 `feature-list.json` 中的 Feature ID。如果是历史遗留补漏，可将其状态从 `done` 改回 `in_progress`，或在 JSON 中新增一条修复 Feature。
@@ -35,7 +36,10 @@ version: 2.0.0
 1. **归档执行上下文**：如果使用了 OpenSpec，必须运行 `openspec-archive-change`。
 2. **同步全局状态**：更新 `docs/harness/feature-list.json` 中对应项的状态为 `done`。
 3. **清理 Active 状态**：在 `docs/harness/claude-progress.txt` 中将该任务从 `Active` 移入 `已完成`，并简要叙述遗留了什么，以及对下一个接手 Agent 的建议。
-4. **质量门禁**：运行 `pnpm agent:check`。
+4. **状态门禁**：运行 `pnpm agent:status`，确保 Harness 与 OpenSpec 状态一致。
+5. **构建门禁**：运行 `pnpm agent:build`，确保当前可构建。
+6. **债务观察**：可运行 `pnpm agent:lint` 查看 Biome 债务；当前该命令作为观察项，不作为维护期交付阻塞项。
+7. **综合门禁**：运行 `pnpm agent:check`，其语义为 `agent:status + agent:build`。
 
 ## 3. 约束事项
 - 严禁在未更新 Harness 的情况下结束会话。

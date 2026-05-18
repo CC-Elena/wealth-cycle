@@ -1,10 +1,17 @@
 # 项目开发进度 (Claude Progress)
 
 ## 核心元数据 (Metadata)
-- **最后更新**: 2026-04-23
+- **最后更新**: 2026-05-06
 - **当前版本**: v1.5
-- **当前焦点**: 核心功能闭环与系统连贯性优化
+- **当前焦点**: 维护、体验打磨与 Phase 12 未来 AI 增强预研
 - **状态**: 🟢 健康 (所有已知功能已开发完毕)
+
+---
+
+## Active (当前进行中)
+
+- **无进行中的核心实现任务**。
+- OpenSpec active changes 仅保留 `openspec/changes/inventory-camera-quick-entry/`，对应 `M12-A1`，状态为 pending；该任务依赖 Vision AI 接口就绪，当前不应视为未完成回归。
 
 ---
 
@@ -18,6 +25,8 @@
 - [DONE] **全量实体离线同步**: 实现了基于 `mutate` 的通用增量同步协议。
 - [DONE] **S5-F1**: 云端同步协议 Shell 实现 (Local-First 架构)
 - [DONE] **M4-A5**: 自动化调剂实验 (已完成预测引擎、Agent 提议链路及前端交互闭环)
+- [DONE] **Governance Sync 2026-05-05**: 补齐本地 pnpm 入口与项目依赖目录；对齐 Harness 与 OpenSpec 状态，将 `automated-adjustment-experiment`、`notification-system`、`data-export` 归档至 `openspec/changes/archive/2026-05-05-*`。
+- [DONE] **S2-F2 AI 辅助开发轻量治理**: 新增 `agent:status` / `agent:bootstrap` / `agent:build` / `agent:lint`，并将 `agent:check` 调整为状态一致性 + 构建门禁。
 
 ---
 
@@ -54,6 +63,7 @@
 ### 2. 性能与安全性持续优化
 - **加密性能优化**: SQLCipher 在极大数据量下的表现监测。
 - **同步冲突检测细化**: 目前为 Last-Write-Wins，后续可引入 CRDT 或更复杂的版本控制。
+- **本地原生依赖环境**: 当前依赖安装已通过 `pnpm install --ignore-scripts` 完成；若需要运行后端 SQLite/SQLCipher 原生模块，需补齐可支持 C++20 的本机编译工具链，或恢复可下载的 `better-sqlite3` / `better-sqlite3-multiple-ciphers` 预构建包。
 
 ---
 

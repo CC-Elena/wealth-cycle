@@ -4,6 +4,9 @@
   "main": "dist/index.js",
   "type": "module",
   "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "dependencies": {
     "zod": "^3.23.8"
   }

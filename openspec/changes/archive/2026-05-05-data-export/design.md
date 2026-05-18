@@ -20,8 +20,8 @@
    - 调用后端 API 并触发浏览器下载。
 
 ## 任务列表
-- [ ] 1. 后端实现 `GovernanceService.exportAllData`。
-- [ ] 2. 后端新增 `FinanceController` 导出接口。
-- [ ] 3. 前端 `financeStore` 增加导出方法。
-- [ ] 4. 前端 UI 增加导出按钮并实现下载逻辑。
-- [ ] 5. 验证导出的 JSON 文件格式完整性。
+- [x] 1. 后端实现 `GovernanceService.exportAllData`。
+- [x] 2. 后端新增 `FinanceController` 导出接口。
+- [x] 3. 前端 `financeStore` 增加导出方法。
+- [x] 4. 前端 UI 增加导出按钮并实现下载逻辑。
+- [x] 5. 验证导出的 JSON 文件格式完整性。

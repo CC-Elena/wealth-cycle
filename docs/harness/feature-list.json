@@ -153,6 +153,11 @@
           "id": "S2-F1",
           "description": "建立 task-workflow-manager Skill 与 Harness (docs/harness) 协作规范",
           "status": "done"
+        },
+        {
+          "id": "S2-F2",
+          "description": "AI 辅助开发轻量治理：新增 agent status/bootstrap/build/lint 脚本，拆分可执行门禁与债务观察项",
+          "status": "done"
         }
       ]
     },

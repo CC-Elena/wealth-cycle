@@ -8,10 +8,14 @@
   "packageManager": "pnpm@9.15.4",
   "scripts": {
     "dev": "pnpm --filter \"./apps/*\" --parallel run dev",
-    "build": "pnpm --filter \"./apps/*\" run build",
+    "build": "pnpm --filter @stock/shared run build && pnpm --filter \"./apps/*\" run build",
     "check": "biome check --write .",
     "format": "biome format --write .",
-    "agent:check": "biome check . && pnpm build",
+    "agent:bootstrap": "node scripts/agent-bootstrap.mjs",
+    "agent:status": "node scripts/agent-status.mjs",
+    "agent:build": "pnpm build",
+    "agent:lint": "biome check .",
+    "agent:check": "pnpm agent:status && pnpm agent:build",
     "repomix": "repomix"
   },
   "devDependencies": {
